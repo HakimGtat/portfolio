@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Not found">
+  <section class="container nf">
+    <span class="eyebrow">Error 404</span>
+    <h1>Packet dropped.</h1>
+    <p>That page doesn't exist, or it moved. <a href="/">Head back home</a>.</p>
+  </section>
+</BaseLayout>
+
+<style>
+  .nf {
+    padding: 18vh var(--gutter);
+    max-width: 640px;
+  }
+</style>

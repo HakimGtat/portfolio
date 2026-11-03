@@ -1,0 +1,32 @@
+{
+  "reviewed": false,
+  "model": "hand-written starter draft",
+  "commit": "working-tree",
+  "overview": "Every project page is built ahead of time, at [[build time]], from two files: one I write by hand (the problem, my role, the results) and one that holds the walkthrough you're reading now.\n\nThe walkthrough starts as a draft from an [[llm|LLM]]. A script hands Claude the project's code with every line numbered and asks for a reply in a fixed shape. I review and edit that draft. When the site builds, it pulls the code at an exact [[commit sha|commit SHA]], checks that every note still points at lines that exist, and only then turns it into a page. In the browser, one small interactive [[island]] (the code viewer) does the highlighting.",
+  "steps": [
+    {
+      "title": "Asking Claude for a draft, in a fixed shape",
+      "file": "scripts/explain.ts",
+      "lines": [81, 111],
+      "note": "First, every line of code gets its number written in front of it, like `  42| return x;`. That way Claude can't guess at line numbers: it reads them straight off the page.\n\nThen the script sends the numbered code to Claude with `output_config`. That asks for [[structured output]]: instead of free-form text, the reply must match a [[schema]] with an overview and a list of steps, each with a file, a start line and an end line. A reply that doesn't fit the shape is rejected, so the rest of the pipeline never has to deal with a messy answer."
+    },
+    {
+      "title": "The check that stops notes from drifting",
+      "file": "src/lib/validate.ts",
+      "lines": [8, 32],
+      "note": "This is the safety net. It gets the list of steps and the real line count of each file, and checks three things: the notes were written for the same commit the page shows, every step points at a file that is actually displayed, and every [[line range]] fits inside its file.\n\nIt doesn't throw an error itself. It returns a list of problems in plain English, so the same function can stop a build or just print warnings in the draft script."
+    },
+    {
+      "title": "Refusing to build a page that's wrong",
+      "file": "src/lib/project.ts",
+      "lines": [71, 89],
+      "note": "Here the build loads the explanation for a project and runs the check. If anything comes back, it throws an error, and the whole site build stops with a message that names the file and the bad step.\n\nIt also looks at the `reviewed` flag. On my machine an unreviewed draft only shows a warning, so I can preview it. In the production build (`import.meta.env.PROD`), an unreviewed draft stops the build. Nothing an AI wrote reaches the live site until I've read it."
+    },
+    {
+      "title": "Highlighting the lines in the browser",
+      "file": "src/components/explorer/ProjectExplorer.tsx",
+      "lines": [41, 61],
+      "note": "This is the part you're using right now. Whenever the active step or file changes, this [[react hook|React hook]] runs. It goes through every line of code on the page and adds or removes a few CSS classes: `hl` for lines in the step's range, `dim` for everything else.\n\nThen it finds the first highlighted line and scrolls the code box so that line sits near the top. The colors and the fade are all CSS. The code only decides which lines get which class, by editing the [[dom]] directly."
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+---
+import { tagCategory } from '../data/tags';
+
+interface Props {
+  name: string;
+}
+const { name } = Astro.props;
+const category = tagCategory(name);
+---
+
+<span class={`tag tag-${category}`} title={category}>{name}</span>
+
+<style>
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    line-height: 1;
+    padding: 0.38em 0.6em;
+    border-radius: 3px;
+    border: 1px solid color-mix(in srgb, var(--tag-color) 45%, transparent);
+    color: var(--tag-color);
+    background: color-mix(in srgb, var(--tag-color) 8%, transparent);
+    white-space: nowrap;
+  }
+  .tag::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 1px;
+    background: var(--tag-color);
+  }
+  .tag-language {
+    --tag-color: var(--tag-language);
+  }
+  .tag-hardware {
+    --tag-color: var(--tag-hardware);
+  }
+  .tag-networking {
+    --tag-color: var(--tag-networking);
+  }
+  .tag-tools {
+    --tag-color: var(--tag-tools);
+  }
+</style>

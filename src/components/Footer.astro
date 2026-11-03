@@ -1,0 +1,32 @@
+---
+import { site } from '../data/site';
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container row">
+    <span>© {year} {site.name}</span>
+    <span class="hand">built from scratch, explained line by line</span>
+    <span><a href={site.github}>GitHub</a> · <a href={site.linkedin}>LinkedIn</a></span>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--rule);
+    margin-top: clamp(64px, 10vw, 120px);
+    padding: 28px 0;
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .hand {
+    font-size: 1.2rem;
+  }
+</style>

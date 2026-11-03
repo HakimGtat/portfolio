@@ -1,0 +1,34 @@
+---
+title: This Portfolio
+summary: The site you're on. A static portfolio whose "Explain this" walkthroughs are pinned to exact commits and checked at build time.
+order: 1
+repo: self
+# Switch to "Hakim112/<repo>" and a real SHA after the first push.
+commit: working-tree
+role: Solo. Design, front end, build pipeline and the explanation tooling.
+stack: [TypeScript, Astro, React, Shiki, Claude API, Cloudflare]
+results:
+  - Walkthrough line ranges verified on every build
+files:
+  - path: src/components/explorer/ProjectExplorer.tsx
+    label: ProjectExplorer.tsx
+  - path: src/lib/project.ts
+    label: project.ts
+  - path: src/lib/validate.ts
+    label: validate.ts
+  - path: scripts/explain.ts
+    label: explain.ts
+---
+
+## The problem
+
+Most portfolios show a list of repos and hope someone clicks through. The people reading them often don't have time to read raw source, and some of them aren't programmers at all. I wanted every project to come with a guide: the real code on one side, and a plain-English note on the other that points at the exact lines it's talking about.
+
+The catch is that code changes. If a note says "lines 40–60 do the prediction" and I later refactor that file, the note is now quietly wrong, on a page meant to impress people.
+
+## What I built
+
+- **Pinned source.** Each project names a specific commit. The site fetches the files at that commit when it builds, so what you see never drifts from what the notes describe.
+- **A build-time check.** Before a page is generated, every walkthrough step is checked against the real file. If a line range doesn't exist, or the notes were written for a different commit, the build fails instead of shipping something wrong.
+- **AI drafts, human review.** A small script sends the pinned code to Claude and gets back a draft walkthrough in a fixed format. I edit it, then mark it reviewed. Unreviewed drafts can't reach production.
+- **A static site.** Pages are plain HTML. Only the code viewer loads JavaScript, and only when you scroll to it.

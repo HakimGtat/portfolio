@@ -1,0 +1,323 @@
+---
+import { site } from '../data/site';
+---
+
+<section class="hero" data-hero>
+  <canvas class="scope" aria-hidden="true"></canvas>
+  <div class="container hero-inner">
+    <span class="eyebrow">{site.role} · {site.location}</span>
+    <h1 class="name" data-reveal>{site.name}</h1>
+    <p class="tagline" data-reveal>
+      I write the code that sits close to the hardware: embedded C, C++ and network software. Every
+      project here comes with a plain-English walkthrough, so you can see how it works, not just that it
+      does.
+    </p>
+    <div class="cta" data-reveal>
+      <a class="btn primary" href="#projects">See the projects</a>
+      <a class="btn" href={site.github}>GitHub ↗</a>
+    </div>
+    <p class="scan-note hand" aria-hidden="true">↖ scanned in, like my LiDAR project</p>
+  </div>
+</section>
+
+<script>
+  // LiDAR sweep: a rotating scan line paints a room-like point cloud and reveals the hero text
+  // with a conic mask that follows the beam. Runs one fast reveal, then idles slowly.
+  const hero = document.querySelector<HTMLElement>('[data-hero]')!;
+  const canvas = hero.querySelector<HTMLCanvasElement>('.scope')!;
+  const ctx = canvas.getContext('2d')!;
+  const reveals = [...hero.querySelectorAll<HTMLElement>('[data-reveal]')];
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const TAU = Math.PI * 2;
+  const REVEAL_MS = 2600;
+  const IDLE_REV_MS = 9000;
+
+  type Pt = { x: number; y: number; a: number };
+  let w = 0;
+  let h = 0;
+  let ox = 0;
+  let oy = 0;
+  let points: Pt[] = [];
+  let t0 = 0;
+  let revealed = reduced;
+  let running = true;
+
+  // Deterministic pseudo-random so the "room" is the same on every visit.
+  function rng(seed: number) {
+    return () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+  }
+
+  // Bearing measured clockwise from north, matching CSS conic-gradient.
+  const bearing = (x: number, y: number) => (Math.atan2(y - oy, x - ox) + Math.PI / 2 + TAU) % TAU;
+
+  function layout() {
+    const r = hero.getBoundingClientRect();
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    w = r.width;
+    h = r.height;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const narrow = w < 760;
+    ox = w * (narrow ? 0.82 : 0.76);
+    oy = h * (narrow ? 0.2 : 0.5);
+
+    const rand = rng(42);
+    points = [];
+    const jitter = () => (rand() - 0.5) * 6;
+    const wall = (x1: number, y1: number, x2: number, y2: number, n: number) => {
+      for (let i = 0; i < n; i++) {
+        const k = i / n;
+        if (rand() < 0.12) continue; // gaps, like a real scan
+        const x = x1 + (x2 - x1) * k + jitter();
+        const y = y1 + (y2 - y1) * k + jitter();
+        points.push({ x, y, a: bearing(x, y) });
+      }
+    };
+    // An irregular room around the sensor, plus a couple of "objects".
+    const L = w * 0.04, R = w * 0.97, T = h * 0.08, B = h * 0.93;
+    const step = 7;
+    wall(L, T, w * 0.55, T, (w * 0.51) / step);
+    wall(w * 0.55, T, w * 0.62, T + h * 0.12, 14);
+    wall(w * 0.62, T + h * 0.12, R, T + h * 0.12, (R - w * 0.62) / step);
+    wall(R, T + h * 0.12, R, B, (B - T) / step);
+    wall(R, B, L, B, (R - L) / step);
+    wall(L, B, L, T, (B - T) / step);
+    const box = (cx: number, cy: number, s: number) => {
+      wall(cx - s, cy - s, cx + s, cy - s, (2 * s) / 6);
+      wall(cx + s, cy - s, cx + s, cy + s, (2 * s) / 6);
+    };
+    box(ox - w * 0.12, oy + h * 0.25, Math.min(w, h) * 0.05);
+    box(ox + w * 0.1, oy - h * 0.28, Math.min(w, h) * 0.035);
+  }
+
+  function colors() {
+    const s = getComputedStyle(document.documentElement);
+    return { teal: s.getPropertyValue('--teal').trim(), purple: s.getPropertyValue('--purple').trim() };
+  }
+
+  function angleAt(t: number) {
+    if (t < REVEAL_MS) {
+      const p = t / REVEAL_MS;
+      return (1 - Math.pow(1 - p, 2)) * TAU; // ease-out
+    }
+    return TAU + ((t - REVEAL_MS) / IDLE_REV_MS) * TAU;
+  }
+
+  function setMask(angle: number | null) {
+    for (const el of reveals) {
+      if (angle === null) {
+        el.style.maskImage = '';
+        el.style.webkitMaskImage = '';
+        continue;
+      }
+      const r = el.getBoundingClientRect();
+      const hr = hero.getBoundingClientRect();
+      const cx = ox - (r.left - hr.left);
+      const cy = oy - (r.top - hr.top);
+      const deg = (angle * 180) / Math.PI;
+      const m = `conic-gradient(from 0deg at ${cx}px ${cy}px, #000 0deg ${deg}deg, transparent ${deg + 0.01}deg)`;
+      el.style.maskImage = m;
+      el.style.webkitMaskImage = m;
+    }
+  }
+
+  function draw(angle: number, firstPass: boolean) {
+    const { teal, purple } = colors();
+    ctx.clearRect(0, 0, w, h);
+
+    // Range rings
+    ctx.strokeStyle = teal;
+    ctx.globalAlpha = 0.09;
+    ctx.lineWidth = 1;
+    for (let r = 80; r < Math.max(w, h); r += 80) {
+      ctx.beginPath();
+      ctx.arc(ox, oy, r, 0, TAU);
+      ctx.stroke();
+    }
+
+    // Points: bright when just swept, fading to a faint baseline.
+    const a = angle % TAU;
+    for (const p of points) {
+      if (firstPass && p.a > angle) continue;
+      const since = (a - p.a + TAU) % TAU;
+      const glow = Math.exp(-since / 1.1);
+      ctx.globalAlpha = 0.18 + 0.75 * glow;
+      ctx.fillStyle = glow > 0.6 ? purple : teal;
+      ctx.fillRect(p.x - 1.2, p.y - 1.2, 2.4, 2.4);
+    }
+
+    if (!reduced) {
+      // Beam with a fading trail (canvas angle 0 = east, so shift by -90°).
+      const ca = a - Math.PI / 2;
+      const reach = Math.hypot(Math.max(ox, w - ox), Math.max(oy, h - oy));
+      const trail = 0.9;
+      const g = ctx.createConicGradient(ca - trail, ox, oy);
+      g.addColorStop(0, 'transparent');
+      g.addColorStop(trail / TAU, teal);
+      g.addColorStop(trail / TAU + 0.0001, 'transparent');
+      ctx.globalAlpha = 0.13;
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(ox, oy);
+      ctx.arc(ox, oy, reach, ca - trail, ca);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.globalAlpha = 0.55;
+      ctx.strokeStyle = teal;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(ox, oy);
+      ctx.lineTo(ox + Math.cos(ca) * reach, oy + Math.sin(ca) * reach);
+      ctx.stroke();
+    }
+
+    // Sensor
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = purple;
+    ctx.beginPath();
+    ctx.arc(ox, oy, 4.5, 0, TAU);
+    ctx.fill();
+    ctx.globalAlpha = 0.35;
+    ctx.strokeStyle = purple;
+    ctx.beginPath();
+    ctx.arc(ox, oy, 10, 0, TAU);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  function finishReveal() {
+    if (revealed) return;
+    revealed = true;
+    setMask(null);
+    hero.classList.add('is-revealed');
+  }
+
+  function frame(now: number) {
+    if (!running) return;
+    if (!t0) t0 = now;
+    const t = now - t0;
+    const angle = angleAt(t);
+    const firstPass = t < REVEAL_MS;
+    try {
+      draw(angle, firstPass);
+    } catch {
+      // Canvas feature missing in this browser: skip the effect, never hide the text.
+      finishReveal();
+      return;
+    }
+    if (firstPass && !revealed) setMask(angle);
+    else finishReveal();
+    requestAnimationFrame(frame);
+  }
+
+  layout();
+  if (reduced) {
+    hero.classList.add('is-revealed');
+    draw(TAU, false);
+  } else {
+    setMask(0);
+    requestAnimationFrame(frame);
+    // Fail-safe: if frames never run (background tab, throttling), show the text anyway.
+    setTimeout(finishReveal, REVEAL_MS + 600);
+    // Pause when the hero is off screen.
+    new IntersectionObserver(([e]) => {
+      const was = running;
+      running = e.isIntersecting || !revealed;
+      if (running && !was) requestAnimationFrame(frame);
+    }).observe(hero);
+  }
+
+  let resizeTimer = 0;
+  addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(() => {
+      layout();
+      if (reduced) draw(TAU, false);
+    }, 150);
+  });
+</script>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: min(82vh, 760px);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    border-bottom: 1px solid var(--rule);
+  }
+  .scope {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .hero-inner {
+    position: relative;
+    width: 100%;
+    padding-top: 48px;
+    padding-bottom: 64px;
+  }
+  .name {
+    font-size: clamp(2.6rem, 8vw, 5.4rem);
+    letter-spacing: -0.03em;
+    max-width: 12ch;
+    margin-bottom: 0.35em;
+  }
+  .tagline {
+    font-size: clamp(1.05rem, 2vw, 1.25rem);
+    max-width: 34rem;
+    color: var(--ink-soft);
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.8rem;
+  }
+  .btn {
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    font-weight: 500;
+    padding: 0.7rem 1.2rem;
+    border-radius: 4px;
+    border: 1.5px solid var(--ink);
+    color: var(--ink);
+    background: var(--paper-raised);
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .btn:hover {
+    border-color: var(--teal);
+    color: var(--teal);
+  }
+  .btn.primary {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .btn.primary:hover {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: var(--paper);
+  }
+  .scan-note {
+    position: absolute;
+    right: var(--gutter);
+    bottom: 18px;
+    margin: 0;
+    font-size: 1.2rem;
+    opacity: 0;
+    transition: opacity 0.8s 0.3s;
+  }
+  .is-revealed .scan-note {
+    opacity: 0.85;
+  }
+  @media (max-width: 760px) {
+    .scan-note {
+      display: none;
+    }
+  }
+</style>

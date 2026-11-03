@@ -1,0 +1,41 @@
+---
+// A horizontal circuit trace with two vias and 45° jogs, used between sections.
+---
+
+<div class="trace" aria-hidden="true">
+  <svg viewBox="0 0 1000 24" preserveAspectRatio="none">
+    <path d="M0 18 H380 L392 6 H760 L772 18 H1000" vector-effect="non-scaling-stroke"></path>
+  </svg>
+  <span class="via" style="left: 39.2%"></span>
+  <span class="via" style="left: 76%"></span>
+</div>
+
+<style>
+  .trace {
+    position: relative;
+    height: 24px;
+    margin: clamp(48px, 8vw, 88px) 0;
+  }
+  svg {
+    width: 100%;
+    height: 24px;
+    display: block;
+  }
+  path {
+    fill: none;
+    stroke: var(--teal);
+    stroke-width: 1.5;
+    opacity: 0.55;
+  }
+  .via {
+    position: absolute;
+    top: 0;
+    width: 12px;
+    height: 12px;
+    margin-left: -6px;
+    border-radius: 50%;
+    border: 1.5px solid var(--teal);
+    background: var(--paper);
+    opacity: 0.8;
+  }
+</style>

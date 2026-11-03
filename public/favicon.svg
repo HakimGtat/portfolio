@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <style>
+    .b{fill:#1b2330}.p{fill:#7d8796}.n{fill:#f7f5ef}.t{fill:#f7f5ef;font:600 13px monospace}
+    @media (prefers-color-scheme:dark){.b{fill:#e6ebf2}.n,.t{fill:#0e1726}}
+  </style>
+  <rect class="p" x="1" y="13" width="8" height="4" rx="1"/>
+  <rect class="p" x="1" y="22" width="8" height="4" rx="1"/>
+  <rect class="p" x="1" y="31" width="8" height="4" rx="1"/>
+  <rect class="p" x="39" y="13" width="8" height="4" rx="1"/>
+  <rect class="p" x="39" y="22" width="8" height="4" rx="1"/>
+  <rect class="p" x="39" y="31" width="8" height="4" rx="1"/>
+  <rect class="b" x="8" y="6" width="32" height="36" rx="3"/>
+  <path class="n" d="M20 6a4 4 0 0 0 8 0"/>
+  <text class="t" x="24" y="30" text-anchor="middle">AG</text>
+</svg>

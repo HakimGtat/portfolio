@@ -1,0 +1,214 @@
+---
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import TraceDivider from '../components/TraceDivider.astro';
+import ChipLogo from '../components/ChipLogo.astro';
+import { site } from '../data/site';
+
+const projects = (
+  await getCollection('projects', (p) => import.meta.env.DEV || p.data.status === 'live')
+).sort((a, b) => a.data.order - b.data.order);
+
+const hasResume = existsSync(join(process.cwd(), 'public', site.resumePath));
+---
+
+<BaseLayout>
+  <Hero />
+
+  <div class="container">
+    <section id="projects" class="section">
+      <div class="section-head">
+        <span class="eyebrow">01 / Projects</span>
+        <h2>Things I've built</h2>
+        <p class="lede">
+          Each one has the real source code and an <strong>Explain this</strong> walkthrough that takes
+          you through the important parts in plain English.
+        </p>
+      </div>
+      <div class="grid">
+        {projects.map((project, i) => <ProjectCard project={project} index={i} />)}
+        <div class="card-soon">
+          <span class="hand">more on the bench…</span>
+          <p>LiDAR scanner, network servers, the Breezy smart fan and more are being cleaned up for GitHub.</p>
+        </div>
+      </div>
+    </section>
+
+    <TraceDivider />
+
+    <section id="about" class="section about">
+      <div class="about-text">
+        <span class="eyebrow">02 / About</span>
+        <h2>Hi, I'm Hakim.</h2>
+        <p>
+          I'm a computer engineer (B.Eng., McMaster, 2024) based in Ottawa. I like the layer where
+          software meets hardware: microcontrollers, caches, sockets, state machines. Those are the places
+          where a few lines of code decide how fast or how reliably a whole system runs.
+        </p>
+        <p>
+          I've also spent time on the operations side of engineering. I helped roll out SAP and Azure at a
+          Pepsi site while supervising about 100 people, and tracked down equipment failures as a
+          reliability intern at Thermo Fisher. Both taught me that code only matters if people can use and
+          understand it, which is why every project here comes with a walkthrough.
+        </p>
+      </div>
+      <aside class="spec">
+        <div class="spec-head">
+          <ChipLogo size={28} />
+          <span>spec sheet</span>
+        </div>
+        <dl>
+          <dt>Languages</dt>
+          <dd>C, C++, Python, TypeScript, SQL, SystemVerilog</dd>
+          <dt>Embedded</dt>
+          <dd>MSP432, Raspberry Pi, FSMs, SRAM / VGA / UART</dd>
+          <dt>Networking</dt>
+          <dd>TCP/UDP, IPv4/IPv6, Berkeley sockets</dd>
+          <dt>Certs</dt>
+          <dd>
+            {
+              site.certifications.map((c) => (
+                <span class="cert">
+                  {c.name}
+                  {c.status !== 'earned' && <em> ({c.status})</em>}
+                </span>
+              ))
+            }
+          </dd>
+        </dl>
+      </aside>
+    </section>
+
+    <TraceDivider />
+
+    <section id="contact" class="section contact">
+      <span class="eyebrow">03 / Contact</span>
+      <h2>Let's talk.</h2>
+      <p class="lede">
+        I'm looking for roles in embedded, networking and systems software. The fastest way to reach me is
+        email.
+      </p>
+      <div class="contact-links">
+        <a class="contact-main" href={`mailto:${site.email}`}>{site.email}</a>
+        <div class="contact-row">
+          <a href={site.linkedin}>LinkedIn ↗</a>
+          <a href={site.github}>GitHub ↗</a>
+          {hasResume && <a href={site.resumePath} download>Resume (PDF) ↓</a>}
+        </div>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .section {
+    padding-top: clamp(56px, 9vw, 96px);
+    scroll-margin-top: 64px;
+  }
+  .section-head {
+    max-width: 640px;
+    margin-bottom: 2.2rem;
+  }
+  .lede {
+    color: var(--ink-soft);
+    font-size: 1.05rem;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+    gap: 1.25rem;
+  }
+  .card-soon {
+    border: 1.5px dashed var(--rule);
+    border-radius: var(--radius);
+    padding: 1.4rem;
+    color: var(--ink-faint);
+    font-size: 0.92rem;
+  }
+  .card-soon .hand {
+    font-size: 1.5rem;
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+
+  .about {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: start;
+  }
+  .about-text p {
+    color: var(--ink-soft);
+  }
+  .spec {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--paper-raised);
+    font-size: 0.9rem;
+  }
+  .spec-head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--rule);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+  }
+  dt,
+  dd {
+    margin: 0;
+    padding: 0.65rem 1rem;
+    border-bottom: 1px dashed var(--rule);
+  }
+  dl > :nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+  dt {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--teal);
+    padding-right: 0.5rem;
+  }
+  .cert {
+    display: block;
+  }
+  .cert em {
+    color: var(--ink-faint);
+  }
+
+  .contact-links {
+    margin-top: 1.5rem;
+  }
+  .contact-main {
+    font-family: var(--font-mono);
+    font-size: clamp(1.1rem, 3.6vw, 1.8rem);
+    font-weight: 600;
+    word-break: break-all;
+  }
+  .contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.92rem;
+  }
+  @media (max-width: 760px) {
+    .about {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

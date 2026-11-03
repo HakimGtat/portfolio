@@ -1,0 +1,83 @@
+---
+// Short clips are self-hosted and loop silently. YouTube only loads after a click.
+interface Props {
+  type: 'video' | 'youtube' | 'image';
+  src: string;
+  poster?: string;
+  caption?: string;
+}
+const { type, src, poster, caption } = Astro.props;
+const thumb = type === 'youtube' ? (poster ?? `https://i.ytimg.com/vi/${src}/hqdefault.jpg`) : poster;
+---
+
+<figure class="demo">
+  {type === 'video' && <video src={src} poster={poster} autoplay muted loop playsinline preload="metadata" />}
+  {type === 'image' && <img src={src} alt={caption ?? ''} loading="lazy" />}
+  {
+    type === 'youtube' && (
+      <button class="yt" type="button" data-yt={src} aria-label="Play video">
+        <img src={thumb} alt="" loading="lazy" />
+        <span class="play" aria-hidden="true">▶</span>
+      </button>
+    )
+  }
+  {caption && <figcaption class="hand">{caption}</figcaption>}
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('button[data-yt]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const frame = document.createElement('iframe');
+      frame.src = `https://www.youtube-nocookie.com/embed/${btn.dataset.yt}?autoplay=1`;
+      frame.allow = 'autoplay; encrypted-media; picture-in-picture';
+      frame.allowFullscreen = true;
+      frame.title = 'Project video';
+      btn.replaceWith(frame);
+    });
+  });
+</script>
+
+<style>
+  .demo {
+    margin: 0 0 2.5rem;
+  }
+  video,
+  img,
+  .yt,
+  .demo :global(iframe) {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: var(--radius);
+    border: 1px solid var(--rule);
+    background: var(--code-bg);
+  }
+  .yt {
+    position: relative;
+    padding: 0;
+    cursor: pointer;
+    overflow: hidden;
+  }
+  .yt img {
+    border: 0;
+    border-radius: 0;
+  }
+  .play {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    transform: translate(-50%, -50%);
+    width: 64px;
+    height: 64px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--purple);
+    color: #fff;
+    font-size: 1.4rem;
+  }
+  figcaption {
+    margin-top: 0.4rem;
+    font-size: 1.25rem;
+  }
+</style>

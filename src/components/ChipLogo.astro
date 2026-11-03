@@ -1,0 +1,51 @@
+---
+interface Props {
+  size?: number;
+  title?: string;
+}
+const { size = 40, title } = Astro.props;
+const pins = [0, 1, 2];
+---
+
+<svg
+  class="chip"
+  width={size}
+  height={size}
+  viewBox="0 0 48 48"
+  role={title ? 'img' : undefined}
+  aria-hidden={title ? undefined : 'true'}
+  aria-label={title}
+>
+  {pins.map((i) => <rect x="2" y={13 + i * 9} width="7" height="3" rx="1" class="pin" />)}
+  {pins.map((i) => <rect x="39" y={13 + i * 9} width="7" height="3" rx="1" class="pin" />)}
+  <rect x="9" y="7" width="30" height="34" rx="3" class="body" />
+  <path d="M20 7 a4 4 0 0 0 8 0" class="notch" />
+  <circle cx="14" cy="13" r="1.6" class="dot" />
+  <text x="24" y="31" text-anchor="middle" class="label">AG</text>
+</svg>
+
+<style>
+  .chip {
+    display: block;
+    flex-shrink: 0;
+  }
+  .body {
+    fill: var(--ink);
+  }
+  .pin {
+    fill: var(--ink-faint);
+  }
+  .notch {
+    fill: var(--paper);
+  }
+  .dot {
+    fill: var(--teal);
+  }
+  .label {
+    fill: var(--paper);
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+  }
+</style>

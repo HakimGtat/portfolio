@@ -1,0 +1,202 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Tag from '../../components/Tag.astro';
+import Demo from '../../components/Demo.astro';
+import TraceDivider from '../../components/TraceDivider.astro';
+import ProjectExplorer from '../../components/explorer/ProjectExplorer.tsx';
+import { loadProjectView } from '../../lib/project';
+import { sourceUrl, SELF_REPO, WORKING_TREE } from '../../lib/source';
+import { site } from '../../data/site';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects', (p) => import.meta.env.DEV || p.data.status === 'live');
+  return projects.map((project) => ({ params: { slug: project.id }, props: { project } }));
+}
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+const { project } = Astro.props;
+const { data } = project;
+const { Content } = await render(project);
+const view = await loadProjectView(project);
+const repoUrl = sourceUrl(data.repo, data.commit);
+const shortCommit = data.commit === WORKING_TREE ? 'working tree' : data.commit.slice(0, 7);
+---
+
+<BaseLayout title={data.title} description={data.summary}>
+  <article class="container project">
+    <a class="back" href="/#projects">← All projects</a>
+
+    <header class="head">
+      <span class="eyebrow">Project</span>
+      <h1>{data.title}</h1>
+      <p class="summary">{data.summary}</p>
+      <div class="tags">{data.stack.map((t) => <Tag name={t} />)}</div>
+    </header>
+
+    <div class="facts">
+      <section class="fact">
+        <h2 class="fact-label">My role</h2>
+        <p>{data.role}</p>
+      </section>
+      {
+        data.results.length > 0 && (
+          <section class="fact">
+            <h2 class="fact-label">Results</h2>
+            <ul class="results">
+              {data.results.map((r) => (
+                <li>{r}</li>
+              ))}
+            </ul>
+          </section>
+        )
+      }
+      <section class="fact">
+        <h2 class="fact-label">Source</h2>
+        <p class="mono">
+          {
+            data.repo === SELF_REPO ? (
+              <a href={site.github}>this site's repo</a>
+            ) : (
+              <a href={repoUrl}>{data.repo}</a>
+            )
+          }
+          <br /><span class="commit">@ {shortCommit}</span>
+        </p>
+      </section>
+    </div>
+
+    {data.demo && <Demo {...data.demo} />}
+
+    <section class="prose">
+      <Content />
+    </section>
+
+    {
+      view.overviewHtml && (
+        <section class="overview">
+          <h2>
+            How it works <span class="hand">the plain-English version</span>
+          </h2>
+          <div class="overview-body" set:html={view.overviewHtml} />
+        </section>
+      )
+    }
+
+    <TraceDivider />
+
+    <section class="code">
+      <h2>The code</h2>
+      <p class="code-intro">
+        {
+          view.steps.length > 0
+            ? 'Hit "Explain this" for a guided walkthrough. Each step highlights the lines it talks about.'
+            : 'Key files from the project.'
+        }
+      </p>
+      <ProjectExplorer client:idle files={view.files} steps={view.steps} repoUrl={repoUrl} />
+      {!view.reviewed && view.steps.length > 0 && <p class="draft-flag">Dev only: this walkthrough is an unreviewed draft.</p>}
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .project {
+    padding-top: clamp(24px, 5vw, 48px);
+  }
+  .back {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    text-decoration: none;
+    color: var(--ink-faint);
+  }
+  .head {
+    margin: 1.5rem 0 2rem;
+    max-width: 760px;
+  }
+  h1 {
+    font-size: clamp(1.9rem, 5vw, 2.9rem);
+  }
+  .summary {
+    font-size: 1.15rem;
+    color: var(--ink-soft);
+  }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 2.5rem;
+  }
+  .fact {
+    background: var(--paper-raised);
+    padding: 1rem 1.2rem;
+  }
+  .fact p {
+    margin: 0;
+  }
+  .fact-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 0.4rem;
+  }
+  .results {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+  .results li::marker {
+    color: var(--purple);
+  }
+  .mono {
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+  }
+  .commit {
+    color: var(--ink-faint);
+  }
+  .prose,
+  .overview {
+    max-width: 720px;
+  }
+  .prose :global(h2) {
+    margin-top: 2rem;
+  }
+  .overview {
+    margin-top: 2.5rem;
+  }
+  .overview h2 .hand {
+    font-size: 1.35rem;
+    font-weight: 500;
+    margin-left: 0.4rem;
+  }
+  .overview-body {
+    padding: 1.1rem 1.3rem;
+    border-left: 3px solid var(--note-ink);
+    background: var(--purple-soft);
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+  .overview-body :global(p:last-child) {
+    margin-bottom: 0;
+  }
+  .code-intro {
+    color: var(--ink-soft);
+  }
+  .draft-flag {
+    margin-top: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--tag-hardware);
+  }
+</style>
