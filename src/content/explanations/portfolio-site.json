@@ -19,7 +19,7 @@
     {
       "title": "Refusing to build a page that's wrong",
       "file": "src/lib/project.ts",
-      "lines": [71, 89],
+      "lines": [72, 90],
       "note": "Here the build loads the explanation for a project and runs the check. If anything comes back, it throws an error, and the whole site build stops with a message that names the file and the bad step.\n\nIt also looks at the `reviewed` flag. On my machine an unreviewed draft only shows a warning, so I can preview it. In the production build (`import.meta.env.PROD`), an unreviewed draft stops the build. Nothing an AI wrote reaches the live site until I've read it."
     },
     {

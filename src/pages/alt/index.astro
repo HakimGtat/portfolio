@@ -1,0 +1,466 @@
+---
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { getCollection } from 'astro:content';
+import AltLayout from '../../alt/AltLayout.astro';
+import HeroDemo from '../../alt/HeroDemo.astro';
+import Icon from '../../alt/Icon.astro';
+import { site } from '../../data/site';
+
+const projects = (
+  await getCollection('projects', (p) => import.meta.env.DEV || p.data.status === 'live')
+).sort((a, b) => a.data.order - b.data.order);
+
+// Resume projects still being cleaned up for GitHub. Facts only, from the resume.
+const upcoming = [
+  {
+    title: 'Markov prefetcher',
+    summary: 'Predicts the next memory address a program will need and loads it into cache early.',
+    stack: 'C++ · Linux · MacSim · x86',
+    result: '−30% average memory access time',
+  },
+  {
+    title: 'LiDAR spatial scanner',
+    summary: 'Turns a distance sensor through 360° on a microcontroller and maps the room from the readings.',
+    stack: 'Embedded C · MSP432 · ToF sensors',
+  },
+  {
+    title: 'Network servers',
+    summary: 'Client and server programs over TCP and UDP, on both IPv4 and IPv6, built on the sockets API.',
+    stack: 'Python · TCP/UDP · IPv4/IPv6',
+  },
+  {
+    title: 'Breezy smart fan',
+    summary: 'A fan that finds people with an on-device vision model and aims at them. I built the motor control.',
+    stack: 'Python · Raspberry Pi · TensorFlow Lite',
+  },
+  {
+    title: 'Image decompressor',
+    summary: 'Hardware that rebuilds a compressed image with an inverse DCT, written as finite state machines.',
+    stack: 'SystemVerilog · FSMs · SRAM · VGA',
+  },
+];
+
+const experience = [
+  { role: 'Warehouse Supervisor', org: 'Pepsi', when: '2025–2026' },
+  { role: 'Reliability Engineer Intern', org: 'Thermo Fisher Scientific', when: '2022–2023' },
+  { role: 'CNC Machine Operator', org: 'Pryor Metals', when: '2022' },
+];
+
+const hasResume = existsSync(join(process.cwd(), 'public', site.resumePath));
+---
+
+<AltLayout>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <h1 class="display">I build software that sits close to the hardware.</h1>
+        <p class="lead">
+          I'm Hakim Gtat, a computer engineer in Ottawa. I write embedded C, C++ and network software, and
+          every project here comes with a line-by-line explanation of how it works.
+        </p>
+        <div class="actions">
+          <a class="btn btn-primary" href="#work">View work</a>
+          <a class="btn btn-secondary" href={`mailto:${site.email}`}>
+            <Icon name="mail" /> Email me
+          </a>
+        </div>
+        <p class="meta">B.Eng. Computer Engineering, McMaster University. Open to embedded, networking and systems roles.</p>
+      </div>
+      <div class="hero-demo">
+        <HeroDemo />
+      </div>
+    </div>
+  </section>
+
+  <section id="work" class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="h2">Selected work.</h2>
+        <p class="lead">Source code on one side, a plain-English walkthrough on the other.</p>
+      </div>
+
+      <ul class="rows" role="list">
+        {
+          projects.map((p) => (
+            <li>
+              <a class="row row-link" href={`/alt/projects/${p.id}/`}>
+                <div class="row-main">
+                  <h3 class="h3">{p.data.title}</h3>
+                  <p class="row-sum">{p.data.summary}</p>
+                </div>
+                <p class="row-stack">{p.data.stack.join(' · ')}</p>
+                <span class="row-go">
+                  Read the walkthrough <Icon name="arrow-right" />
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="next-head">
+        <h3 class="h3">Next up.</h3>
+        <p class="muted">Resume projects I'm cleaning up for GitHub. Each gets the same walkthrough.</p>
+      </div>
+      <ul class="rows rows-next" role="list">
+        {
+          upcoming.map((p) => (
+            <li class="row">
+              <div class="row-main">
+                <h3 class="h3">{p.title}</h3>
+                <p class="row-sum">{p.summary}</p>
+                {p.result && <p class="row-result">{p.result}</p>}
+              </div>
+              <p class="row-stack">{p.stack}</p>
+              <span class="row-status">Write-up in progress</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section id="about" class="section">
+    <div class="wrap about">
+      <div class="about-text">
+        <h2 class="h2">About.</h2>
+        <p>
+          I like the layer where software meets hardware: microcontrollers, caches, sockets, state
+          machines. Those are the places where a few lines of code decide how fast or how reliably a whole
+          system runs.
+        </p>
+        <p>
+          I've also worked on the operations side of engineering. I helped roll out SAP and Azure at a Pepsi
+          site while supervising about 100 people, and tracked down equipment failures as a reliability
+          intern at Thermo Fisher. Both taught me that code only matters if people can use and understand
+          it, which is why every project here comes with a walkthrough.
+        </p>
+      </div>
+
+      <div class="facts">
+        <div class="fact-group">
+          <h3 class="fact-title">Experience</h3>
+          <ul role="list">
+            {
+              experience.map((e) => (
+                <li class="fact-row">
+                  <span>
+                    {e.role}, <span class="muted">{e.org}</span>
+                  </span>
+                  <span class="when">{e.when}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+        <div class="fact-group">
+          <h3 class="fact-title">Education</h3>
+          <ul role="list">
+            <li class="fact-row">
+              <span>B.Eng. Computer Engineering, <span class="muted">McMaster University</span></span>
+              <span class="when">2024</span>
+            </li>
+          </ul>
+        </div>
+        <div class="fact-group">
+          <h3 class="fact-title">Certifications</h3>
+          <ul role="list">
+            {
+              site.certifications.map((c) => (
+                <li class="fact-row">
+                  <span>{c.name}</span>
+                  <span class="when">{c.status === 'earned' ? 'Earned' : 'In progress'}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+        <div class="fact-group">
+          <h3 class="fact-title">Tools I use</h3>
+          <p class="tools">
+            C, C++, Python, TypeScript, SQL, SystemVerilog. MSP432, Raspberry Pi. TCP/UDP, IPv4/IPv6,
+            Berkeley sockets. Linux, Git, Azure.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" class="section">
+    <div class="wrap">
+      <div class="contact">
+        <div>
+          <h2 class="h2">Let's talk.</h2>
+          <p class="lead">
+            I'm looking for roles in embedded, networking and systems software. Email is the fastest way to
+            reach me.
+          </p>
+        </div>
+        <div class="contact-actions">
+          <a class="btn btn-primary" href={`mailto:${site.email}`}><Icon name="mail" /> {site.email}</a>
+          <div class="contact-row">
+            <a class="btn btn-secondary" href={site.linkedin}><Icon name="linkedin" /> LinkedIn</a>
+            <a class="btn btn-secondary" href={site.github}><Icon name="github" /> GitHub</a>
+            {
+              hasResume && (
+                <a class="btn btn-secondary" href={site.resumePath} download>
+                  <Icon name="download" /> Resume
+                </a>
+              )
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</AltLayout>
+
+<style>
+  /* ---------- Hero ---------- */
+  .hero {
+    padding: clamp(48px, 9vw, 112px) 0 clamp(64px, 9vw, 120px);
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: clamp(32px, 5vw, 72px);
+    align-items: center;
+  }
+  .hero-copy .display {
+    margin-bottom: 24px;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 32px;
+  }
+  .meta {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--hairline);
+    font-size: 14px;
+    color: var(--mute);
+    max-width: 30em;
+  }
+
+  /* ---------- Sections ---------- */
+  .section {
+    padding-top: clamp(72px, 10vw, 128px);
+    scroll-margin-top: 72px;
+  }
+  .section-head {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+
+  /* ---------- Work rows ---------- */
+  .rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--hairline);
+  }
+  .next-head {
+    display: grid;
+    gap: 6px;
+    margin: 72px 0 8px;
+  }
+  .next-head p {
+    font-size: 15px;
+  }
+  .rows-next .h3 {
+    font-size: 1.0625rem;
+  }
+  .rows-next .row {
+    padding: 22px 0;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 17rem) 11rem;
+    gap: 8px 40px;
+    align-items: start;
+    padding: 28px 0;
+    border-bottom: 1px solid var(--hairline);
+    color: inherit;
+    text-decoration: none;
+  }
+  .row-link {
+    position: relative;
+    transition: background-color 0.2s ease;
+  }
+  .row-link::before {
+    content: '';
+    position: absolute;
+    inset: 0 calc(var(--gutter) * -1);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: -1;
+  }
+  .row-link:hover::before,
+  .row-link:focus-visible::before {
+    opacity: 1;
+  }
+  .row-link {
+    isolation: isolate;
+  }
+  .row-sum {
+    margin-top: 6px;
+    color: var(--body);
+    max-width: 38em;
+  }
+  .row-result {
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .row-stack {
+    font-size: 14px;
+    color: var(--mute);
+    padding-top: 3px;
+  }
+  .row-go,
+  .row-status {
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    padding-top: 3px;
+    white-space: nowrap;
+  }
+  .row-go {
+    font-weight: 500;
+  }
+  .row-go :global(.icon) {
+    transition: transform 0.2s ease;
+  }
+  .row-link:hover .row-go :global(.icon) {
+    transform: translateX(3px);
+  }
+  .row-status {
+    color: var(--mute);
+  }
+
+  /* ---------- About ---------- */
+  .about {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(40px, 7vw, 96px);
+    align-items: start;
+  }
+  .about-text {
+    display: grid;
+    gap: 18px;
+  }
+  .about-text h2 {
+    margin-bottom: 6px;
+  }
+  .about-text p {
+    color: var(--body);
+    font-size: 17px;
+    max-width: 36em;
+  }
+  .facts {
+    display: grid;
+    gap: 32px;
+  }
+  .fact-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--mute);
+    letter-spacing: -0.01em;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .facts ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .fact-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--hairline);
+    font-size: 15px;
+  }
+  .when {
+    color: var(--mute);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .tools {
+    padding-top: 12px;
+    font-size: 15px;
+    color: var(--body);
+  }
+
+  /* ---------- Contact ---------- */
+  .contact {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 32px 64px;
+    align-items: end;
+    padding: clamp(32px, 5vw, 56px);
+    background: var(--surface);
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+  }
+  .contact .h2 {
+    margin-bottom: 12px;
+  }
+  .contact-actions {
+    display: grid;
+    gap: 12px;
+    justify-items: start;
+  }
+  .contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  @media (max-width: 960px) {
+    .hero-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .row {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+    .row-stack {
+      grid-column: 1;
+      grid-row: 2;
+    }
+    .row-go,
+    .row-status {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    .contact {
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+    }
+  }
+  @media (max-width: 640px) {
+    .row {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .row-go,
+    .row-status {
+      grid-column: 1;
+      grid-row: auto;
+      justify-self: start;
+    }
+    .about {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

@@ -1,0 +1,413 @@
+/* Clean alternate. System after awesome-design-md's Vercel DESIGN.md: ink on near-white, a strict
+   grey ladder, hairlines, stacked shadows, Geist with negative display tracking, mono for code only. */
+
+:root {
+  --canvas: #fafafa;
+  --surface: #ffffff;
+  --surface-2: #f5f5f5;
+  --ink: #171717;
+  --body: #4d4d4d;
+  --mute: #6b6b6b;
+  --hairline: #ebebeb;
+  --hairline-strong: #d4d4d4;
+  --link: #0062d6;
+  --link-soft: rgba(0, 112, 243, 0.08);
+  --on-ink: #ffffff;
+  --editor: #111111;
+  --editor-ink: #ededed;
+  --editor-mute: #8f8f8f;
+  --editor-rule: #262626;
+  --editor-hl: rgba(59, 151, 255, 0.16);
+  --editor-hl-edge: #3b97ff;
+
+  --ring: 0 0 0 1px rgba(0, 0, 0, 0.08);
+  --shadow-sm: var(--ring), 0 1px 1px rgba(0, 0, 0, 0.02), 0 2px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: var(--ring), 0 2px 2px rgba(0, 0, 0, 0.04), 0 8px 16px -4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: var(--ring), 0 1px 1px rgba(0, 0, 0, 0.02), 0 8px 16px -4px rgba(0, 0, 0, 0.04),
+    0 24px 32px -8px rgba(0, 0, 0, 0.06);
+
+  --sans: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'Geist Mono', ui-monospace, 'Cascadia Code', Menlo, monospace;
+  --page: 1200px;
+  --gutter: clamp(16px, 4vw, 24px);
+
+  /* Tokens the shared code explorer reads. */
+  --paper: var(--canvas);
+  --paper-raised: var(--surface);
+  --ink-soft: var(--body);
+  --ink-faint: var(--mute);
+  --rule: var(--hairline);
+  --teal: var(--link);
+  --teal-soft: var(--link-soft);
+  --purple: var(--ink);
+  --purple-soft: var(--surface-2);
+  --note-ink: var(--ink);
+  --highlight: var(--link-soft);
+  --highlight-edge: var(--link);
+  --code-bg: var(--surface);
+  --shadow: var(--shadow-md);
+  --font-sans: var(--sans);
+  --font-mono: var(--mono);
+  --font-hand: var(--sans);
+  --radius: 8px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --canvas: #0a0a0a;
+    --surface: #111111;
+    --surface-2: #1a1a1a;
+    --ink: #ededed;
+    --body: #a1a1a1;
+    --mute: #8a8a8a;
+    --hairline: #242424;
+    --hairline-strong: #333333;
+    --link: #52a8ff;
+    --link-soft: rgba(82, 168, 255, 0.12);
+    --on-ink: #0a0a0a;
+    --editor: #000000;
+    --editor-rule: #1f1f1f;
+    --ring: 0 0 0 1px rgba(255, 255, 255, 0.09);
+    --shadow-sm: var(--ring);
+    --shadow-md: var(--ring), 0 8px 16px -4px rgba(0, 0, 0, 0.5);
+    --shadow-lg: var(--ring), 0 24px 48px -12px rgba(0, 0, 0, 0.7);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --canvas: #0a0a0a;
+  --surface: #111111;
+  --surface-2: #1a1a1a;
+  --ink: #ededed;
+  --body: #a1a1a1;
+  --mute: #8a8a8a;
+  --hairline: #242424;
+  --hairline-strong: #333333;
+  --link: #52a8ff;
+  --link-soft: rgba(82, 168, 255, 0.12);
+  --on-ink: #0a0a0a;
+  --editor: #000000;
+  --editor-rule: #1f1f1f;
+  --ring: 0 0 0 1px rgba(255, 255, 255, 0.09);
+  --shadow-sm: var(--ring);
+  --shadow-md: var(--ring), 0 8px 16px -4px rgba(0, 0, 0, 0.5);
+  --shadow-lg: var(--ring), 0 24px 48px -12px rgba(0, 0, 0, 0.7);
+  color-scheme: dark;
+}
+
+/* ---------- Base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--canvas);
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+a,
+button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.86em;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  padding: 0.05em 0.35em;
+  border-radius: 4px;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+.wrap {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+}
+
+.skip:focus {
+  left: 16px;
+  top: 12px;
+  z-index: 100;
+  background: var(--ink);
+  color: var(--canvas);
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+/* ---------- Type scale ---------- */
+.display {
+  font-size: clamp(2.4rem, 5.2vw, 3.6rem);
+  line-height: 1.04;
+  letter-spacing: -0.045em;
+}
+
+.h2 {
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  line-height: 1.15;
+  letter-spacing: -0.04em;
+}
+
+.h3 {
+  font-size: 1.25rem;
+  line-height: 1.35;
+  letter-spacing: -0.03em;
+}
+
+.lead {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--body);
+  max-width: 34em;
+}
+
+.muted {
+  color: var(--mute);
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 100px;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--ink) 85%, var(--canvas));
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary:hover {
+  background: var(--surface-2);
+}
+
+.icon {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}
+
+/* ---------- Glossary ---------- */
+.gloss {
+  text-decoration: underline dotted var(--mute);
+  text-underline-offset: 3px;
+  cursor: help;
+  position: relative;
+}
+
+.gloss:hover::after,
+.gloss:focus-visible::after {
+  content: attr(data-def);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  width: min(280px, 70vw);
+  padding: 10px 12px;
+  background: var(--ink);
+  color: var(--canvas);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  pointer-events: none;
+}
+
+/* ---------- Shiki dual theme ---------- */
+.shiki,
+.shiki span {
+  color: var(--shiki-light);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .shiki,
+  :root:not([data-theme='light']) .shiki span {
+    color: var(--shiki-dark);
+  }
+}
+
+:root[data-theme='dark'] .shiki,
+:root[data-theme='dark'] .shiki span {
+  color: var(--shiki-dark);
+}
+
+/* The hero editor is always dark, so it always uses the dark theme. */
+.editor .shiki,
+.editor .shiki span {
+  color: var(--shiki-dark) !important;
+}
+
+/* ---------- Shared explorer, restyled for this system ---------- */
+.alt .explorer {
+  border: 0;
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.alt .explain-toggle {
+  border: 0;
+  border-radius: 100px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 14px;
+}
+
+.alt .explain-toggle:hover,
+.alt .explorer.is-open .explain-toggle {
+  background: color-mix(in srgb, var(--ink) 85%, var(--canvas));
+  color: var(--on-ink);
+}
+
+.alt .file-tab {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  border-radius: 6px;
+}
+
+.alt .file-tab[aria-selected='true'] {
+  color: var(--ink);
+  background: var(--surface-2);
+  font-weight: 500;
+}
+
+.alt .panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-transform: capitalize;
+}
+
+.alt .step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--hairline-strong);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.alt .step.is-active .step-num {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--on-ink);
+}
+
+.alt .step-head:hover {
+  background: var(--surface-2);
+}
+
+.alt .note {
+  border-left: 0;
+  border-radius: 8px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  margin-left: 3.1rem;
+}
+
+.alt .note-arrow {
+  display: none;
+}
+
+.alt .note p + p {
+  margin-top: 10px;
+}
+
+.alt .code-scroll .line.hl {
+  border-left-color: var(--link);
+}
+
+.alt .code-scroll .line.hl::before {
+  color: var(--link);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

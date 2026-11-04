@@ -5,3 +5,7 @@ dist/
 .env
 .env.*
 !.env.example
+.playwright-mcp/
+.impeccable/review/
+.taste-skill/
+.claude/skills/impeccable/scripts/bin/

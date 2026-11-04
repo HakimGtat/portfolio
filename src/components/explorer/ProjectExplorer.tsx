@@ -93,9 +93,7 @@ export default function ProjectExplorer({ files, steps, repoUrl }: Props) {
             aria-controls="explain-panel"
             onClick={toggle}
           >
-            <span className="explain-icon" aria-hidden="true">
-              ✎
-            </span>
+            <Icon name="pen" className="explain-icon" />
             {open ? 'Hide explanation' : 'Explain this'}
           </button>
         )}
@@ -107,7 +105,7 @@ export default function ProjectExplorer({ files, steps, repoUrl }: Props) {
             <span>{file.path}</span>
             {file.url && (
               <a href={file.url} target="_blank" rel="noreferrer">
-                view on GitHub ↗
+                View on GitHub <Icon name="external" />
               </a>
             )}
           </div>
@@ -126,7 +124,7 @@ export default function ProjectExplorer({ files, steps, repoUrl }: Props) {
                 {stepIndex !== null ? stepIndex + 1 : 0}/{steps.length}
               </span>
               <button className="panel-close" aria-label="Close explanation" onClick={() => setOpen(false)}>
-                ×
+                <Icon name="close" />
               </button>
             </div>
             <ol className="steps">
@@ -156,13 +154,13 @@ export default function ProjectExplorer({ files, steps, repoUrl }: Props) {
                 disabled={stepIndex === null || stepIndex === 0}
                 onClick={() => stepIndex !== null && goToStep(stepIndex - 1)}
               >
-                ← Prev
+                <Icon name="left" /> Prev
               </button>
               <button
                 disabled={stepIndex === null || stepIndex === steps.length - 1}
                 onClick={() => stepIndex !== null && goToStep(stepIndex + 1)}
               >
-                Next →
+                Next <Icon name="right" />
               </button>
             </div>
           </aside>
@@ -171,9 +169,39 @@ export default function ProjectExplorer({ files, steps, repoUrl }: Props) {
 
       {repoUrl && (
         <p className="explorer-foot">
-          Showing key files only. <a href={repoUrl}>Browse the full repo on GitHub ↗</a>
+          Showing key files only.{' '}
+          <a href={repoUrl}>
+            Browse the full repo on GitHub <Icon name="external" />
+          </a>
         </p>
       )}
     </div>
+  );
+}
+
+const ICON_PATHS: Record<string, string> = {
+  pen: 'M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4',
+  external: 'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5',
+  close: 'M6 6l12 12M18 6L6 18',
+  left: 'M15 6l-6 6 6 6',
+  right: 'M9 6l6 6-6 6',
+};
+
+function Icon({ name, className = '' }: { name: keyof typeof ICON_PATHS; className?: string }) {
+  return (
+    <svg
+      className={`icon ${className}`}
+      viewBox="0 0 24 24"
+      width="1em"
+      height="1em"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d={ICON_PATHS[name]} />
+    </svg>
   );
 }

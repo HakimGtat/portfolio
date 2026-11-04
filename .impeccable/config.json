@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "geist",
+        "createdAt": "2026-11-04T00:19:09.677Z",
+        "reason": "Font specified by the Vercel DESIGN.md reference the user picked for the /alt design"
+      }
+    ]
+  }
+}

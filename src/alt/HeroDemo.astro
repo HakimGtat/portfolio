@@ -1,0 +1,404 @@
+---
+// The hero's live proof: an excerpt of this site's own validator, stepping through three annotated
+// line ranges. Code comes from the same pinned source as the project page.
+import { getEntry } from 'astro:content';
+import { highlight } from '../lib/project';
+import { readSourceFile, WORKING_TREE } from '../lib/source';
+import { formatNote } from '../lib/notes';
+import Icon from './Icon.astro';
+
+const FILE = 'src/lib/validate.ts';
+const FIRST = 14;
+const LAST = 31;
+const steps = [
+  {
+    title: 'Right code, right commit',
+    lines: [15, 19],
+    note: 'Every walkthrough remembers the commit it was written for. If the page now shows a different commit, the build stops instead of shipping notes about code that changed.',
+  },
+  {
+    title: 'The file is on the page',
+    lines: [22, 26],
+    note: "A step can only point at a file the project actually shows. Otherwise it would send the reader to code they can't see.",
+  },
+  {
+    title: 'The lines really exist',
+    lines: [27, 29],
+    note: 'Last, every [[line range]] has to fit inside its file. A range that runs past the end, or backwards, fails the build.',
+  },
+];
+
+const project = await getEntry('projects', 'portfolio-site');
+if (!project) throw new Error('HeroDemo needs the portfolio-site project entry.');
+const { repo, commit } = project.data;
+const source = await readSourceFile(repo, commit, FILE);
+const excerpt = source.split('\n').slice(FIRST - 1, LAST).join('\n');
+for (const s of steps) {
+  if (s.lines[0] < FIRST || s.lines[1] > LAST) {
+    throw new Error(`HeroDemo step "${s.title}" falls outside the excerpt (L${FIRST}-${LAST}).`);
+  }
+}
+const html = await highlight(excerpt, FILE, FIRST);
+const version = commit === WORKING_TREE ? 'working tree' : commit.slice(0, 7);
+---
+
+<figure class="demo" data-demo>
+  <div class="editor">
+    <div class="editor-bar">
+      <span class="path" translate="no">{FILE}</span>
+      <span class="bar-end">
+        <span class="ver" translate="no">{version}</span>
+        <button type="button" class="play" data-play aria-label="Stop autoplay">
+          <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"></path></svg>
+          <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5l12 7-12 7z"></path></svg>
+        </button>
+      </span>
+    </div>
+    <div class="editor-code" data-code translate="no" set:html={html} />
+    <div class="notes" aria-live="polite">
+      {
+        steps.map((s, i) => (
+          <div class="demo-note" data-note={i} hidden={i !== 0}>
+            <p class="demo-lines">
+              Lines {s.lines[0]}–{s.lines[1]}
+            </p>
+            <div class="demo-text" set:html={formatNote(s.note)} />
+          </div>
+        ))
+      }
+    </div>
+    <div class="tabs" role="group" aria-label="Walkthrough steps">
+      {
+        steps.map((s, i) => (
+          <button
+            type="button"
+            class="tab"
+            aria-label={`Step ${i + 1}: ${s.title}`}
+            aria-pressed={i === 0 ? 'true' : 'false'}
+            data-step={i}
+            data-start={s.lines[0]}
+            data-end={s.lines[1]}
+          >
+            <span class="tab-n">{i + 1}</span>
+            <span class="tab-t">{s.title}</span>
+            <span class="tab-bar" aria-hidden="true" />
+          </button>
+        ))
+      }
+    </div>
+  </div>
+  <figcaption>
+    Real code from this site, explained the way every project is.{' '}
+    <a href="/alt/projects/portfolio-site/">Open the full walkthrough <Icon name="arrow-right" /></a>
+  </figcaption>
+</figure>
+
+<script>
+  const STEP_MS = 5000;
+  document.querySelectorAll<HTMLElement>('[data-demo]').forEach((demo) => {
+    const lines = [...demo.querySelectorAll<HTMLElement>('.line')];
+    const tabs = [...demo.querySelectorAll<HTMLButtonElement>('.tab')];
+    const notes = [...demo.querySelectorAll<HTMLElement>('[data-note]')];
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let current = 0;
+    let timer = 0;
+    let paused = false;
+    let stopped = reduced;
+    let visible = true;
+    const play = demo.querySelector<HTMLButtonElement>('[data-play]')!;
+
+    function setStopped(s: boolean) {
+      stopped = s;
+      demo.classList.toggle('is-stopped', s);
+      play.setAttribute('aria-label', s ? 'Start autoplay' : 'Stop autoplay');
+      show(current);
+      schedule();
+    }
+    play.addEventListener('click', () => setStopped(!stopped));
+    if (stopped) {
+      demo.classList.add('is-stopped');
+      play.setAttribute('aria-label', 'Start autoplay');
+    }
+
+    function show(i: number) {
+      current = i;
+      const tab = tabs[i];
+      const start = Number(tab.dataset.start);
+      const end = Number(tab.dataset.end);
+      for (const line of lines) {
+        const n = Number(line.dataset.line);
+        const on = n >= start && n <= end;
+        line.classList.toggle('hl', on);
+        line.classList.toggle('dim', !on);
+      }
+      tabs.forEach((t, j) => t.setAttribute('aria-pressed', String(j === i)));
+      notes.forEach((n, j) => (n.hidden = j !== i));
+      // Restart the progress bar on the active tab.
+      demo.classList.remove('is-running');
+      void demo.offsetWidth;
+      if (!stopped && !paused) demo.classList.add('is-running');
+    }
+
+    function schedule() {
+      clearTimeout(timer);
+      if (stopped || paused || !visible) return;
+      timer = window.setTimeout(() => {
+        show((current + 1) % tabs.length);
+        schedule();
+      }, STEP_MS);
+    }
+
+    function setPaused(p: boolean) {
+      paused = p;
+      demo.classList.toggle('is-paused', p);
+      if (p) {
+        clearTimeout(timer);
+        demo.classList.remove('is-running');
+      } else {
+        show(current);
+        schedule();
+      }
+    }
+
+    tabs.forEach((tab, i) =>
+      tab.addEventListener('click', () => {
+        show(i);
+        schedule();
+      }),
+    );
+    demo.addEventListener('pointerenter', () => setPaused(true));
+    demo.addEventListener('pointerleave', () => setPaused(false));
+    demo.addEventListener('focusin', () => setPaused(true));
+    demo.addEventListener('focusout', (e) => {
+      if (!demo.contains(e.relatedTarget as Node)) setPaused(false);
+    });
+    new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      schedule();
+    }).observe(demo);
+
+    show(0);
+    schedule();
+  });
+</script>
+
+<style>
+  .demo {
+    margin: 0;
+  }
+  .editor {
+    background: var(--editor);
+    color: var(--editor-ink);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+  }
+  .editor-bar {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--editor-rule);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--editor-mute);
+  }
+  .path {
+    color: var(--editor-ink);
+  }
+  .bar-end {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .play {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    margin: -4px -6px -4px 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--editor-mute);
+    cursor: pointer;
+  }
+  .play:hover {
+    color: var(--editor-ink);
+    background: var(--editor-rule);
+  }
+  .play svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .i-play,
+  :global(.is-stopped) .i-pause {
+    display: none;
+  }
+  :global(.is-stopped) .i-play {
+    display: block;
+  }
+  .editor-code {
+    padding: 14px 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--editor-rule) transparent;
+  }
+  .editor-code :global(pre.shiki) {
+    margin: 0;
+    width: max-content;
+    min-width: 100%;
+    background: transparent !important;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+  }
+  .editor-code :global(pre code) {
+    display: block;
+    white-space: normal;
+    background: none;
+    border: 0;
+    padding: 0;
+    font-size: inherit;
+  }
+  .editor-code :global(.line) {
+    display: block;
+    position: relative;
+    padding: 0 24px 0 52px;
+    white-space: pre;
+    border-left: 2px solid transparent;
+    transition: opacity 0.35s ease, background-color 0.35s ease, border-color 0.35s ease;
+  }
+  .editor-code :global(.line)::before {
+    content: attr(data-line);
+    position: absolute;
+    left: 0;
+    width: 36px;
+    text-align: right;
+    color: var(--editor-mute);
+    font-variant-numeric: tabular-nums;
+  }
+  .editor-code :global(.line.dim) {
+    opacity: 0.4;
+  }
+  .editor-code :global(.line.hl) {
+    background: var(--editor-hl);
+    border-left-color: var(--editor-hl-edge);
+  }
+  .editor-code :global(.line.hl)::before {
+    color: var(--editor-hl-edge);
+  }
+  .notes {
+    border-top: 1px solid var(--editor-rule);
+    padding: 16px 18px 6px;
+    min-height: 112px;
+  }
+  .demo-lines {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--editor-hl-edge);
+    margin-bottom: 6px;
+  }
+  .demo-text {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--editor-ink);
+    max-width: 60ch;
+  }
+  .demo-note:not([hidden]) {
+    animation: note-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes note-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+  .demo-text :global(.gloss) {
+    text-decoration-color: var(--editor-mute);
+  }
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--editor-rule);
+    border-top: 1px solid var(--editor-rule);
+  }
+  .tab {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 12px 14px 14px;
+    border: 0;
+    background: var(--editor);
+    color: var(--editor-mute);
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .tab:hover,
+  .tab[aria-pressed='true'] {
+    color: var(--editor-ink);
+  }
+  .tab-n {
+    font-variant-numeric: tabular-nums;
+    color: var(--editor-mute);
+  }
+  .tab-bar {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 100%;
+    background: var(--editor-hl-edge);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  .tab[aria-pressed='true'] .tab-bar {
+    transform: scaleX(1);
+  }
+  :global(.is-running) .tab[aria-pressed='true'] .tab-bar {
+    animation: progress 5s linear;
+  }
+  @keyframes progress {
+    from {
+      transform: scaleX(0);
+    }
+  }
+  .tab:focus-visible {
+    outline-offset: -2px;
+  }
+  figcaption {
+    margin-top: 14px;
+    font-size: 14px;
+    color: var(--mute);
+  }
+  figcaption a {
+    color: var(--ink);
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  figcaption a:hover {
+    text-decoration: underline;
+  }
+  @media (max-width: 520px) {
+    .tab-t {
+      display: none;
+    }
+    .tab {
+      justify-content: center;
+    }
+  }
+</style>

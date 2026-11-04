@@ -37,7 +37,8 @@ function langFor(path: string): string {
   return LANGS[path.split('.').pop()?.toLowerCase() ?? ''] ?? 'text';
 }
 
-async function highlight(code: string, path: string): Promise<string> {
+// firstLine lets an excerpt keep the real line numbers of the file it came from.
+export async function highlight(code: string, path: string, firstLine = 1): Promise<string> {
   return codeToHtml(code.replace(/\n$/, ''), {
     lang: langFor(path),
     themes: { light: 'github-light', dark: 'github-dark-dimmed' },
@@ -45,7 +46,7 @@ async function highlight(code: string, path: string): Promise<string> {
     transformers: [
       {
         line(node, line) {
-          node.properties['data-line'] = line;
+          node.properties['data-line'] = line + firstLine - 1;
         },
       },
     ],

@@ -69,9 +69,20 @@
   color: var(--paper);
 }
 
+.explorer .icon {
+  display: inline-block;
+  vertical-align: -0.15em;
+  flex-shrink: 0;
+}
+
 .explain-icon {
   font-size: 1rem;
-  line-height: 1;
+}
+
+.panel-nav button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 /* ---------- Body ---------- */

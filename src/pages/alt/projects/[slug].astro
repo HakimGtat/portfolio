@@ -1,0 +1,245 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import AltLayout from '../../../alt/AltLayout.astro';
+import Icon from '../../../alt/Icon.astro';
+import Demo from '../../../components/Demo.astro';
+import ProjectExplorer from '../../../components/explorer/ProjectExplorer.tsx';
+import { loadProjectView } from '../../../lib/project';
+import { sourceUrl, SELF_REPO, WORKING_TREE } from '../../../lib/source';
+import { site } from '../../../data/site';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects', (p) => import.meta.env.DEV || p.data.status === 'live');
+  return projects.map((project) => ({ params: { slug: project.id }, props: { project } }));
+}
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+const { project } = Astro.props;
+const { data } = project;
+const { Content } = await render(project);
+const view = await loadProjectView(project);
+const repoUrl = sourceUrl(data.repo, data.commit);
+const version = data.commit === WORKING_TREE ? 'working tree' : data.commit.slice(0, 7);
+---
+
+<AltLayout title={data.title} description={data.summary}>
+  <article class="wrap project">
+    <a class="back" href="/alt/#work"><Icon name="arrow-left" /> All work</a>
+
+    <header class="head">
+      <h1 class="display">{data.title}</h1>
+      <p class="lead">{data.summary}</p>
+    </header>
+
+    <dl class="facts">
+      <div>
+        <dt>Role</dt>
+        <dd>{data.role}</dd>
+      </div>
+      <div>
+        <dt>Stack</dt>
+        <dd>{data.stack.join(', ')}</dd>
+      </div>
+      {
+        data.results.length > 0 && (
+          <div>
+            <dt>Results</dt>
+            <dd>{data.results.join('; ')}</dd>
+          </div>
+        )
+      }
+      <div>
+        <dt>Source</dt>
+        <dd>
+          {
+            data.repo === SELF_REPO ? (
+              <a href={site.github}>This site's repo</a>
+            ) : (
+              <a href={repoUrl}>{data.repo}</a>
+            )
+          }
+          <span class="commit">{version}</span>
+        </dd>
+      </div>
+    </dl>
+
+    {data.demo && <Demo {...data.demo} />}
+
+    <div class="body">
+      <div class="prose">
+        <Content />
+      </div>
+
+      {
+        view.overviewHtml && (
+          <aside class="overview" aria-labelledby="overview-title">
+            <h2 id="overview-title" class="ov-title">How it works, in plain English</h2>
+            <div class="ov-body" set:html={view.overviewHtml} />
+          </aside>
+        )
+      }
+    </div>
+
+    <section class="code" aria-labelledby="code-title">
+      <div class="code-head">
+        <h2 id="code-title" class="h2">The code.</h2>
+        <p class="lead">
+          {
+            view.steps.length > 0
+              ? 'Press “Explain this” for a guided walkthrough. Each step highlights the lines it describes.'
+              : 'Key files from the project.'
+          }
+        </p>
+      </div>
+      <ProjectExplorer client:idle files={view.files} steps={view.steps} repoUrl={repoUrl} />
+      {
+        !view.reviewed && view.steps.length > 0 && (
+          <p class="draft">Dev only: this walkthrough is an unreviewed draft.</p>
+        )
+      }
+    </section>
+  </article>
+</AltLayout>
+
+<style>
+  .project {
+    padding-top: clamp(32px, 6vw, 64px);
+  }
+  .back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--body);
+    text-decoration: none;
+  }
+  .back:hover {
+    color: var(--ink);
+  }
+  .head {
+    display: grid;
+    gap: 20px;
+    margin: 32px 0 48px;
+    max-width: 52rem;
+  }
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    margin: 0 0 64px;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .facts > div {
+    padding: 20px 24px 22px 0;
+  }
+  .facts > div + div {
+    padding-left: 24px;
+    border-left: 1px solid var(--hairline);
+  }
+  dt {
+    font-size: 13px;
+    color: var(--mute);
+    margin-bottom: 6px;
+  }
+  dd {
+    margin: 0;
+    font-size: 15px;
+  }
+  dd a {
+    text-decoration: underline;
+    text-decoration-color: var(--hairline-strong);
+  }
+  .commit {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--mute);
+  }
+  .body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 24rem);
+    gap: clamp(40px, 6vw, 80px);
+    align-items: start;
+  }
+  .prose {
+    max-width: 40rem;
+    color: var(--body);
+    font-size: 17px;
+  }
+  .prose :global(h2) {
+    font-size: 1.375rem;
+    letter-spacing: -0.03em;
+    margin: 48px 0 14px;
+  }
+  .prose :global(h2:first-child) {
+    margin-top: 0;
+  }
+  .prose :global(p),
+  .prose :global(ul) {
+    margin: 0 0 16px;
+  }
+  .prose :global(ul) {
+    padding-left: 1.2rem;
+  }
+  .prose :global(li) {
+    margin-bottom: 10px;
+  }
+  .prose :global(li::marker) {
+    color: var(--mute);
+  }
+  .prose :global(strong) {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .overview {
+    position: sticky;
+    top: 96px;
+    padding: 28px;
+    background: var(--surface);
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+  }
+  .ov-title {
+    font-size: 1rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+  .ov-body {
+    font-size: 15px;
+    color: var(--body);
+  }
+  .ov-body :global(p + p) {
+    margin-top: 12px;
+  }
+  .code {
+    margin-top: clamp(72px, 10vw, 112px);
+  }
+  .code-head {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .draft {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #b45309;
+  }
+  @media (max-width: 960px) {
+    .body {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .overview {
+      position: static;
+    }
+  }
+  @media (max-width: 640px) {
+    .facts > div + div {
+      padding-left: 0;
+      border-left: 0;
+      border-top: 1px solid var(--hairline);
+    }
+  }
+</style>
