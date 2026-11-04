@@ -9,3 +9,6 @@ dist/
 .impeccable/review/
 .taste-skill/
 .claude/skills/impeccable/scripts/bin/
+.impeccable/mocks/
+.impeccable/questions/
+.impeccable/hook.cache.json

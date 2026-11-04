@@ -7,28 +7,26 @@ related_targets: ["src/pages/alt/projects/[slug].astro"]
 
 ## Scope
 
-`/alt` home and `/alt/projects/[slug]`: a clean, professional alternate of the portfolio, built to be compared against the notebook design at `/`. Mode: Experience (portfolio). Code-led build (no image generation available).
+`/alt` home and `/alt/projects/[slug]`: a fresh alternate of the portfolio (third attempt), compared against the notebook design at `/`. Mode: Experience. Code-led (no image generation).
 
-Audience and job: recruiters and hiring engineers skim, judge whether Hakim writes and explains real code well, then email. Proof: the real walkthrough of this site's own source. Constraints: no invented projects, metrics, logos or testimonials; phone never shown.
-
-Pinned by the user: "clean portfolio type website, really professional", system taken from awesome-design-md's Vercel DESIGN.md (system only, no brand clothes: no mesh gradient, no logos).
+User-pinned direction (2026-11-03 interview): broad generalist, headline "I automate the boring parts."; warm light mood with a real dark mode; split layout (fixed left identity and nav, scrolling right); sections in order Projects, brief About, Career path; references Josh Comeau (warmth, playful detail) and Brittany Chiang (split layout, cursor spotlight, card hover) as inspiration only, not to copy; all four liveliness ideas: an automation toy, cursor spotlight + card hover, playful micro-interactions, illustrated hero scene; illustration style soft, rounded, flat colour; toy lets the visitor pick the job. Rejected before: stark black/white/red, abstract shapes, engineer-only framing, static poster feel. job-tracker repo not listed yet. career-ops is someone else's project: never present it as Hakim's.
 
 ## Direction contract
 
-THESIS: The walkthrough is the proof, so it sits in the first viewport working, not behind a click. Refuses the centred headline + buttons + equal card grid portfolio.
+THESIS: The site shows what Hakim does before it says it: a friendly little machine turns messy work into tidy results when you press Run. Refuses the dark terminal portfolio and the headline-over-card-grid template.
 
-OWN-WORLD: Ink #171717 on #fafafa with a strict grey ladder (#4d4d4d body, #6b6b6b mute, #ebebeb hairlines), stacked soft shadows with inset hairline rings, Geist 400/500/600 with negative display tracking, Geist Mono only for code, paths, line numbers and commit IDs. One colour job: link blue #0070f3 marks highlighted lines and links. Dark ink editor panel is the only dark surface on light pages.
+OWN-WORLD: Warm light ground, deep plum ink, four friendly flat colours (tangerine, sunshine, teal, grape) used as rounded fields and illustration, soft shadows, large radii. Bricolage Grotesque display, Figtree text, JetBrains Mono only for code. Dark mode in deep plum-navy with the same colours brightened.
 
-STORY: Visitor reads who Hakim is in one sentence, watches real code annotate itself line by line, understands he builds and explains low-level software, opens a project, emails him.
+STORY: Visitor reads the headline, plays with the machine (spreadsheet, tickets or sensor data), understands his range across data, IT and engineering, skims projects, reads a short about, follows his career path with real numbers, emails him.
 
-FIRST VIEWPORT: Desktop: left 5/12 column, 56px headline (sentence case, period), one-sentence intro, black pill "View work" + white pill "Email me". Right 7/12: dark editor showing `src/lib/validate.ts` with three annotated steps auto-advancing every 5s, step tabs under it. Mobile: headline first, editor below at full width.
+FIRST VIEWPORT: Desktop: left column fixed: name, headline at display size, one-line pitch, section nav with active indicator, email button and social icons. Right column top: the machine card, job picker pills, a big Run button, messy input on the left of the machine and the clean output on the right.
 
-FORM: Vercel-system pinned by brief (position 1 of 1, brief-pinned). seed: none (unavailable)
+FORM: User-pinned split portfolio with an illustrated automation machine. seed: none (unavailable)
 
-SIGNATURE INTERACTION: hero editor steps through real line ranges (highlight sweeps in, note crossfades); hover or focus pauses; tabs jump; reduced motion shows step 1 static.
+SIGNATURE INTERACTION: pick a job, press Run: input items fly into the machine's funnel, gears turn, the belt rolls, tidy output lands item by item. One orchestrated moment; everything else is small (spotlight, card lift, button squish). Reduced motion swaps input for output instantly.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 
 ## Unresolved
 
-Which design (notebook at `/` or clean at `/alt`) ships.
+Which design (notebook at `/` or this one at `/alt`) ships.

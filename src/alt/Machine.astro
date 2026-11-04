@@ -1,0 +1,619 @@
+---
+// The signature toy: pick a job, press Run, and the little machine turns messy input into a tidy
+// result. All data here is sample data, labelled as such on the card.
+import Icon from './Icon.astro';
+
+const jobs = {
+  sheet: {
+    label: 'Spreadsheet',
+    role: 'Data',
+    input: ['  jan , 1200 ', 'FEB,980', 'Mar ;1 340', 'feb,980', 'APR, —', 'may,1510 '],
+    status: 'Cleaned 6 messy rows into 4: fixed the formats, dropped a duplicate and a blank.',
+  },
+  tickets: {
+    label: 'Support tickets',
+    role: 'IT support',
+    input: ['printer jammed again', "CAN'T LOG IN", 'server down!!!', 'need a new mouse', 'vpn really slow', "can't log in (2nd)"],
+    status: 'Sorted 6 tickets into 5 by priority and merged the duplicate login report.',
+  },
+  sensor: {
+    label: 'Sensor data',
+    role: 'Engineering',
+    input: ['θ=0° d=1.24m', '45,1.80', 'θ=90° 1.10m', '135° d=?', '180:1.31', 'θ=225 1.77', '270°,1.15', '315 1.62m'],
+    status: 'Mapped 7 of 8 distance readings into a room outline and dropped 1 bad reading.',
+  },
+};
+---
+
+<section class="machine-card" aria-labelledby="machine-title" data-machine>
+  <script type="application/json" data-jobs set:html={JSON.stringify(jobs)} />
+  <div class="mc-head">
+    <div>
+      <h2 id="machine-title" class="mc-title">Try it: give the machine a boring job.</h2>
+      <p class="mc-sub">Pick one, then press Run. <span class="pill">Sample data</span></p>
+    </div>
+  </div>
+
+  <div class="mc-controls">
+    <div class="jobs" role="radiogroup" aria-label="Choose a job">
+      {
+        Object.entries(jobs).map(([id, j], i) => (
+          <button type="button" class="job" role="radio" aria-checked={i === 0 ? 'true' : 'false'} data-job={id}>
+            <span class="job-role">{j.role}</span>
+            {j.label}
+          </button>
+        ))
+      }
+    </div>
+    <button type="button" class="btn btn-primary run" data-run>
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z" fill="currentColor"></path></svg>
+      <span data-run-label>Run</span>
+    </button>
+  </div>
+
+  <div class="stage">
+    <div class="tray tray-in" aria-label="Messy input">
+      <p class="tray-label">In</p>
+      <ul class="chips" data-in role="list"></ul>
+    </div>
+
+    <div class="bot" data-bot aria-hidden="true">
+      <svg viewBox="0 0 240 230">
+        <path class="funnel" d="M78 8h84l-20 40h-44z"></path>
+        <rect class="body" x="46" y="46" width="148" height="122" rx="26"></rect>
+        <rect class="window" x="68" y="64" width="104" height="60" rx="16"></rect>
+        <g class="gear gear-a"><circle cx="102" cy="94" r="15" class="gear-teeth"></circle><circle cx="102" cy="94" r="6" class="gear-hub"></circle></g>
+        <g class="gear gear-b"><circle cx="140" cy="92" r="11" class="gear-teeth b"></circle><circle cx="140" cy="92" r="4" class="gear-hub"></circle></g>
+        <circle class="lamp" cx="176" cy="60" r="7"></circle>
+        <g class="face">
+          <circle class="eye" cx="104" cy="144" r="5"></circle>
+          <circle class="eye" cx="136" cy="144" r="5"></circle>
+          <path class="smile" d="M110 154q10 8 20 0"></path>
+        </g>
+        <rect class="chute" x="192" y="122" width="30" height="22" rx="8"></rect>
+        <rect class="belt" x="22" y="184" width="196" height="18" rx="9"></rect>
+        <line class="belt-marks" x1="34" y1="193" x2="206" y2="193"></line>
+        <rect class="foot" x="62" y="206" width="26" height="14" rx="7"></rect>
+        <rect class="foot" x="152" y="206" width="26" height="14" rx="7"></rect>
+      </svg>
+    </div>
+
+    <div class="tray tray-out" aria-label="Tidy output">
+      <p class="tray-label">Out</p>
+      <div class="out" data-out>
+        <p class="out-empty">The tidy result lands here.</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="status" data-status aria-live="polite"></p>
+</section>
+
+<script>
+  type Job = { label: string; role: string; input: string[]; status: string };
+
+  const ROT = [-6, 4, -2, 7, -4, 3, -7, 5];
+
+  function renderOutput(job: string): string {
+    if (job === 'sheet') {
+      const rows: [string, string][] = [
+        ['Jan', '1,200'],
+        ['Feb', '980'],
+        ['Mar', '1,340'],
+        ['May', '1,510'],
+      ];
+      const max = 1510;
+      return `
+        <table class="o-table"><thead><tr><th>Month</th><th>Units</th></tr></thead><tbody>
+        ${rows.map(([m, v]) => `<tr class="o-item"><td>${m}</td><td>${v}</td></tr>`).join('')}
+        </tbody></table>
+        <div class="o-bars o-item" aria-hidden="true">
+        ${rows.map(([m, v]) => `<span style="--h:${(Number(v.replace(',', '')) / max) * 100}%"><i></i><b>${m}</b></span>`).join('')}
+        </div>`;
+    }
+    if (job === 'tickets') {
+      const q: [string, string, string][] = [
+        ['P1', 'Server down', 'tangerine'],
+        ['P2', 'Login failure ×2', 'sun'],
+        ['P2', 'VPN slow', 'sun'],
+        ['P3', 'Printer jam', 'teal'],
+        ['P4', 'New mouse', 'grape'],
+      ];
+      return `<ol class="o-queue">${q
+        .map(([p, t, c]) => `<li class="o-item"><span class="pill pill-${c}">${p}</span>${t}</li>`)
+        .join('')}</ol>`;
+    }
+    // sensor: polar readings to points; 135° was the bad reading.
+    const pts: [number, number][] = [
+      [0, 1.24],
+      [45, 1.8],
+      [90, 1.1],
+      [180, 1.31],
+      [225, 1.77],
+      [270, 1.15],
+      [315, 1.62],
+    ];
+    const s = 34;
+    const xy = pts.map(([a, d]) => {
+      const r = (a * Math.PI) / 180;
+      return [80 + Math.cos(r) * d * s, 70 - Math.sin(r) * d * s];
+    });
+    return `<svg class="o-map" viewBox="0 0 160 140" role="img" aria-label="Room outline from 7 distance readings">
+      <polygon class="o-room o-item" points="${xy.map((p) => p.join(',')).join(' ')}"></polygon>
+      ${xy.map(([x, y]) => `<circle class="o-pt o-item" cx="${x}" cy="${y}" r="4"></circle>`).join('')}
+      <circle class="o-sensor" cx="80" cy="70" r="5"></circle>
+    </svg>`;
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-machine]').forEach((card) => {
+    const jobs: Record<string, Job> = JSON.parse(card.querySelector('[data-jobs]')!.textContent!);
+    const inList = card.querySelector<HTMLUListElement>('[data-in]')!;
+    const out = card.querySelector<HTMLElement>('[data-out]')!;
+    const bot = card.querySelector<HTMLElement>('[data-bot]')!;
+    const runBtn = card.querySelector<HTMLButtonElement>('[data-run]')!;
+    const runLabel = card.querySelector<HTMLElement>('[data-run-label]')!;
+    const status = card.querySelector<HTMLElement>('[data-status]')!;
+    const jobBtns = [...card.querySelectorAll<HTMLButtonElement>('[data-job]')];
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let job = 'sheet';
+    let state: 'idle' | 'running' | 'done' = 'idle';
+
+    function setInputs() {
+      inList.innerHTML = jobs[job].input
+        .map((t, i) => `<li class="chip" style="--r:${ROT[i % ROT.length]}deg">${t.replace(/</g, '&lt;')}</li>`)
+        .join('');
+      out.innerHTML = '<p class="out-empty">The tidy result lands here.</p>';
+      status.textContent = '';
+      bot.classList.remove('is-done');
+      runLabel.textContent = 'Run';
+      state = 'idle';
+    }
+
+    function pick(id: string) {
+      if (state === 'running') return;
+      job = id;
+      jobBtns.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.job === id)));
+      setInputs();
+    }
+
+    async function run() {
+      if (state === 'running') return;
+      if (state === 'done') setInputs();
+      state = 'running';
+      runBtn.disabled = true;
+      jobBtns.forEach((b) => (b.disabled = true));
+      runLabel.textContent = 'Running…';
+      bot.classList.add('is-running');
+
+      const chips = [...inList.querySelectorAll<HTMLElement>('.chip')];
+      if (!reduced) {
+        const funnel = bot.getBoundingClientRect();
+        const tx = funnel.left + funnel.width / 2;
+        const ty = funnel.top + funnel.height * 0.06;
+        await Promise.all(
+          chips.map((chip, i) => {
+            const r = chip.getBoundingClientRect();
+            const dx = tx - (r.left + r.width / 2);
+            const dy = ty - (r.top + r.height / 2);
+            return chip
+              .animate(
+                [
+                  { transform: `rotate(${ROT[i % ROT.length]}deg)`, opacity: 1 },
+                  { transform: `translate(${dx * 0.6}px, ${dy - 40}px) rotate(0deg) scale(0.8)`, opacity: 1, offset: 0.6 },
+                  { transform: `translate(${dx}px, ${dy}px) scale(0.2)`, opacity: 0 },
+                ],
+                { duration: 700, delay: i * 110, easing: 'cubic-bezier(0.5, 0, 0.75, 0)', fill: 'forwards' },
+              )
+              .finished;
+          }),
+        );
+        await new Promise((r) => setTimeout(r, 450));
+      }
+      inList.innerHTML = '<li class="in-done">All done. Nothing left to do by hand.</li>';
+
+      out.innerHTML = renderOutput(job);
+      const items = [...out.querySelectorAll<HTMLElement | SVGElement>('.o-item')];
+      if (!reduced) {
+        items.forEach((el, i) =>
+          el.animate(
+            [
+              { opacity: 0, transform: 'translateY(10px) scale(0.92)' },
+              { opacity: 1, transform: 'none' },
+            ],
+            { duration: 450, delay: i * 90, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)', fill: 'backwards' },
+          ),
+        );
+      }
+      bot.classList.remove('is-running');
+      bot.classList.add('is-done');
+      status.textContent = jobs[job].status;
+      runLabel.textContent = 'Run again';
+      runBtn.disabled = false;
+      jobBtns.forEach((b) => (b.disabled = false));
+      state = 'done';
+    }
+
+    jobBtns.forEach((b) => b.addEventListener('click', () => pick(b.dataset.job!)));
+    card.querySelector('.jobs')!.addEventListener('keydown', (e) => {
+      const k = (e as KeyboardEvent).key;
+      if (k !== 'ArrowRight' && k !== 'ArrowLeft') return;
+      const i = jobBtns.findIndex((b) => b.dataset.job === job);
+      const next = jobBtns[(i + (k === 'ArrowRight' ? 1 : jobBtns.length - 1)) % jobBtns.length];
+      pick(next.dataset.job!);
+      next.focus();
+    });
+    runBtn.addEventListener('click', run);
+    setInputs();
+  });
+</script>
+
+<style>
+  .machine-card {
+    position: relative;
+    padding: clamp(20px, 3vw, 32px);
+    border-radius: 28px;
+    background: var(--surface);
+    box-shadow: var(--shadow-md), inset 0 0 0 1px var(--line);
+  }
+  .mc-title {
+    font-size: clamp(1.35rem, 2.2vw, 1.7rem);
+  }
+  .mc-sub {
+    margin-top: 6px;
+    color: var(--ink-3);
+    font-size: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .mc-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .jobs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .job {
+    display: grid;
+    text-align: left;
+    padding: 8px 14px 9px;
+    border: 0;
+    border-radius: 14px;
+    background: var(--tint);
+    color: var(--ink);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.25;
+    cursor: pointer;
+    transition: transform 0.35s var(--spring), background-color 0.2s, box-shadow 0.2s;
+  }
+  .job:hover:not(:disabled) {
+    transform: translateY(-2px);
+  }
+  .job:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+  .job[aria-checked='true'] {
+    background: var(--grape-soft);
+    box-shadow: inset 0 0 0 2px var(--grape);
+  }
+  .job:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+  .job-role {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-3);
+  }
+  .run:disabled {
+    cursor: progress;
+    opacity: 0.85;
+  }
+
+  /* ---------- Stage ---------- */
+  .stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(150px, 210px) minmax(0, 1fr);
+    gap: 16px;
+    align-items: center;
+    margin-top: 24px;
+  }
+  .tray {
+    align-self: stretch;
+    min-height: 250px;
+    padding: 12px;
+    border-radius: 18px;
+    background: var(--tint);
+  }
+  .tray-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-3);
+    margin-bottom: 8px;
+  }
+  .chips {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 6px;
+  }
+  .chips :global(.chip) {
+    padding: 5px 10px;
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+    font-family: var(--mono);
+    font-size: 12.5px;
+    white-space: pre;
+    transform: rotate(var(--r));
+  }
+  .chips :global(.in-done) {
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--teal-ink);
+  }
+  .out :global(.out-empty) {
+    display: grid;
+    place-items: center;
+    min-height: 200px;
+    border: 2px dashed var(--line);
+    border-radius: 14px;
+    color: var(--ink-3);
+    font-size: 14px;
+    text-align: center;
+    padding: 12px;
+  }
+
+  /* ---------- The machine ---------- */
+  .bot svg {
+    display: block;
+    width: 100%;
+    overflow: visible;
+  }
+  .funnel {
+    fill: var(--teal);
+    stroke: var(--teal);
+    stroke-width: 8;
+    stroke-linejoin: round;
+  }
+  .body {
+    fill: var(--tangerine);
+  }
+  .window {
+    fill: var(--surface);
+  }
+  .gear {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .gear-teeth {
+    fill: none;
+    stroke: var(--grape);
+    stroke-width: 9;
+    stroke-dasharray: 5 4;
+  }
+  .gear-teeth.b {
+    stroke: var(--sun);
+    stroke-width: 7;
+    stroke-dasharray: 4 3.5;
+  }
+  .gear-hub {
+    fill: var(--ink);
+  }
+  .lamp {
+    fill: var(--sun);
+    transition: fill 0.3s;
+  }
+  .eye {
+    fill: #2a2140;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: blink 5s infinite;
+  }
+  .smile {
+    fill: none;
+    stroke: #2a2140;
+    stroke-width: 4;
+    stroke-linecap: round;
+  }
+  .chute {
+    fill: var(--teal);
+  }
+  .belt {
+    fill: var(--ink);
+  }
+  .belt-marks {
+    stroke: var(--ground);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 6 12;
+  }
+  .foot {
+    fill: var(--ink);
+  }
+  .bot.is-running .gear-a {
+    animation: spin 1.2s linear infinite;
+  }
+  .bot.is-running .gear-b {
+    animation: spin 0.9s linear infinite reverse;
+  }
+  .bot.is-running .belt-marks {
+    animation: belt 0.6s linear infinite;
+  }
+  .bot.is-running .lamp {
+    animation: lamp 0.5s steps(2) infinite;
+  }
+  .bot.is-running svg {
+    animation: hum 0.25s ease-in-out infinite alternate;
+  }
+  .bot.is-done .lamp {
+    fill: var(--teal);
+  }
+  .bot.is-done .smile {
+    d: path('M106 150q14 14 28 0');
+  }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes belt {
+    to {
+      stroke-dashoffset: -18;
+    }
+  }
+  @keyframes lamp {
+    50% {
+      fill: var(--tangerine-ink);
+    }
+  }
+  @keyframes hum {
+    to {
+      transform: translateY(-2px) rotate(0.6deg);
+    }
+  }
+  @keyframes blink {
+    0%,
+    94%,
+    100% {
+      transform: scaleY(1);
+    }
+    97% {
+      transform: scaleY(0.1);
+    }
+  }
+
+  /* ---------- Outputs ---------- */
+  .out :global(.o-table) {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    background: var(--surface);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .out :global(.o-table th) {
+    text-align: left;
+    font-size: 12px;
+    color: var(--ink-3);
+    padding: 6px 10px;
+  }
+  .out :global(.o-table td) {
+    padding: 5px 10px;
+    border-top: 1px solid var(--line);
+  }
+  .out :global(.o-table td:last-child),
+  .out :global(.o-table th:last-child) {
+    text-align: right;
+  }
+  .out :global(.o-bars) {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 70px;
+    margin-top: 10px;
+    padding: 8px 10px 0;
+    background: var(--surface);
+    border-radius: 12px;
+  }
+  .out :global(.o-bars span) {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 2px;
+  }
+  .out :global(.o-bars i) {
+    display: block;
+    width: 100%;
+    height: calc(var(--h) - 18px);
+    background: var(--teal);
+    border-radius: 6px 6px 0 0;
+  }
+  .out :global(.o-bars b) {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-3);
+  }
+  .out :global(.o-queue) {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+  }
+  .out :global(.o-queue li) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    background: var(--surface);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .out :global(.o-map) {
+    display: block;
+    width: 100%;
+    background: var(--surface);
+    border-radius: 12px;
+  }
+  .out :global(.o-room) {
+    fill: var(--teal-soft);
+    stroke: var(--teal);
+    stroke-width: 2.5;
+    stroke-linejoin: round;
+  }
+  .out :global(.o-pt) {
+    fill: var(--tangerine);
+  }
+  .out :global(.o-sensor) {
+    fill: var(--ink);
+  }
+  .status {
+    min-height: 1.6em;
+    margin-top: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--teal-ink);
+  }
+
+  @media (max-width: 640px) {
+    .stage {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-areas: 'bot bot' 'in out';
+    }
+    .bot {
+      grid-area: bot;
+      width: 150px;
+      justify-self: center;
+    }
+    .tray-in {
+      grid-area: in;
+    }
+    .tray-out {
+      grid-area: out;
+    }
+    .tray {
+      min-height: 220px;
+    }
+    .chips :global(.chip) {
+      font-size: 11.5px;
+    }
+  }
+</style>

@@ -8,6 +8,60 @@
         "value": "geist",
         "createdAt": "2026-11-04T00:19:09.677Z",
         "reason": "Font specified by the Vercel DESIGN.md reference the user picked for the /alt design"
+      },
+      {
+        "rule": "overused-font",
+        "value": "helvetica",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-11-04T00:28:14.076Z",
+        "reason": "Throwaway decision-page sketch, not shipped; font is placeholder for a skeleton render"
+      },
+      {
+        "rule": "overused-font",
+        "value": "arial",
+        "files": [
+          ".impeccable/mocks/decision/model-pick.html"
+        ],
+        "createdAt": "2026-11-04T00:28:14.257Z",
+        "reason": "Throwaway decision-page sketch, not shipped; font is placeholder for a skeleton render"
+      },
+      {
+        "rule": "overused-font",
+        "value": "arial",
+        "files": [
+          ".impeccable/mocks/decision/challenger-fletcher.html"
+        ],
+        "createdAt": "2026-11-04T00:28:14.442Z",
+        "reason": "Throwaway decision-page sketch, not shipped; font is placeholder for a skeleton render"
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "src/alt/alt.css"
+        ],
+        "createdAt": "2026-11-04T00:55:43.746Z",
+        "reason": "False positive: .alt .explorer sets border-radius: 0, so the top rule sits on a square edge (checked in render)"
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "files": [
+          "src/alt/Machine.astro"
+        ],
+        "createdAt": "2026-11-04T01:28:51.339Z",
+        "reason": "User confirmed: picked 'Playful micro-interactions' (buttons that bounce) in the 2026-11-03 interview"
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "files": [
+          "src/alt/alt.css"
+        ],
+        "createdAt": "2026-11-04T01:28:51.573Z",
+        "reason": "User confirmed: picked 'Playful micro-interactions' (buttons that bounce) in the 2026-11-03 interview"
       }
     ]
   }

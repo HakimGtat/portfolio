@@ -8,7 +8,7 @@ web
 
 ## Users
 
-Recruiters, hiring managers and engineers hiring for embedded, networking and systems roles (for example Ottawa telecom/optical companies). They skim a portfolio between other tasks, often have no time to read raw source, and some are not programmers. A second audience is engineers from other fields who want to judge real code quickly.
+Recruiters and hiring managers across a broad range (confirmed 2026-11-03): IT support, data analyst, automation, and embedded/networking/systems roles, including entry-level positions. They skim a portfolio between other tasks, often have no time to read raw source, and many are not programmers. Hakim positions himself as a broad generalist whose common thread is automation: with data, tasks or hardware.
 
 ## Product Purpose
 
@@ -16,7 +16,7 @@ Personal portfolio and long-term hub for Abdelhakim Gtat (Hakim), Computer Engin
 
 ## Positioning
 
-Every project shows its real source code next to a plain-English "Explain this" walkthrough whose steps highlight the exact lines they describe. Walkthroughs are pinned to a commit and checked at build time, so they cannot drift from the code.
+Headline: "I automate the boring parts." Work automation from jobs (Thermo Fisher data pulls and Power BI pipeline, Pepsi dashboards and SAP/Azure rollout) appears in the career path with Hakim's own numbers. Code is a side feature shown on request. Every project can show its real source code next to a plain-English "Explain this" walkthrough whose steps highlight the exact lines they describe. Walkthroughs are pinned to a commit and checked at build time, so they cannot drift from the code.
 
 ## Operating Context
 

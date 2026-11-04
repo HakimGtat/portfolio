@@ -25,42 +25,41 @@ const version = data.commit === WORKING_TREE ? 'working tree' : data.commit.slic
 ---
 
 <AltLayout title={data.title} description={data.summary}>
-  <article class="wrap project">
-    <a class="back" href="/alt/#work"><Icon name="arrow-left" /> All work</a>
+  <div class="bar">
+    <a class="back" href="/alt/#projects"><Icon name="arrow-left" class="back-icon" /> Back to {site.shortName}</a>
+    <button type="button" class="theme" aria-label="Switch light or dark theme" data-theme-toggle>
+      <Icon name="sun" class="sun" />
+      <Icon name="moon" class="moon" />
+    </button>
+  </div>
 
+  <main id="main" class="project">
     <header class="head">
-      <h1 class="display">{data.title}</h1>
-      <p class="lead">{data.summary}</p>
+      <p class="kick-pills">
+        {data.stack.slice(0, 4).map((t) => <span class="pill">{t}</span>)}
+      </p>
+      <h1 class="title">{data.title}</h1>
+      <p class="summary">{data.summary}</p>
     </header>
 
     <dl class="facts">
-      <div>
-        <dt>Role</dt>
+      <div class="fact f-grape">
+        <dt>My role</dt>
         <dd>{data.role}</dd>
-      </div>
-      <div>
-        <dt>Stack</dt>
-        <dd>{data.stack.join(', ')}</dd>
       </div>
       {
         data.results.length > 0 && (
-          <div>
-            <dt>Results</dt>
+          <div class="fact f-teal">
+            <dt>Result</dt>
             <dd>{data.results.join('; ')}</dd>
           </div>
         )
       }
-      <div>
+      <div class="fact f-sun">
         <dt>Source</dt>
         <dd>
-          {
-            data.repo === SELF_REPO ? (
-              <a href={site.github}>This site's repo</a>
-            ) : (
-              <a href={repoUrl}>{data.repo}</a>
-            )
-          }
-          <span class="commit">{version}</span>
+          {data.repo === SELF_REPO ? <a href={site.github}>This site's repo</a> : <a href={repoUrl}>{data.repo}</a>}
+          <span class="commit" translate="no">{version}</span>
         </dd>
       </div>
     </dl>
@@ -71,7 +70,6 @@ const version = data.commit === WORKING_TREE ? 'working tree' : data.commit.slic
       <div class="prose">
         <Content />
       </div>
-
       {
         view.overviewHtml && (
           <aside class="overview" aria-labelledby="overview-title">
@@ -83,163 +81,293 @@ const version = data.commit === WORKING_TREE ? 'working tree' : data.commit.slic
     </div>
 
     <section class="code" aria-labelledby="code-title">
-      <div class="code-head">
-        <h2 id="code-title" class="h2">The code.</h2>
-        <p class="lead">
+      <details class="drawer">
+        <summary>
+          <span>
+            <h2 id="code-title" class="drawer-title">Curious about the code?</h2>
+            <span class="drawer-note">
+              Open {view.files.length} key files{view.steps.length > 0 && ` with a ${view.steps.length}-step walkthrough`}.
+            </span>
+          </span>
+          <span class="drawer-btn" aria-hidden="true"><Icon name="arrow-right" /></span>
+        </summary>
+        <div class="drawer-body">
+          <ProjectExplorer client:idle files={view.files} steps={view.steps} repoUrl={repoUrl} />
           {
-            view.steps.length > 0
-              ? 'Press “Explain this” for a guided walkthrough. Each step highlights the lines it describes.'
-              : 'Key files from the project.'
+            !view.reviewed && view.steps.length > 0 && (
+              <p class="draft">Dev only: this walkthrough is an unreviewed draft.</p>
+            )
           }
-        </p>
-      </div>
-      <ProjectExplorer client:idle files={view.files} steps={view.steps} repoUrl={repoUrl} />
-      {
-        !view.reviewed && view.steps.length > 0 && (
-          <p class="draft">Dev only: this walkthrough is an unreviewed draft.</p>
-        )
-      }
+        </div>
+      </details>
     </section>
-  </article>
+
+    <footer class="foot">
+      <p>Like what you see?</p>
+      <a class="btn btn-primary" href={`mailto:${site.email}`}>Say hello <Icon name="arrow-right" class="icon-nudge" /></a>
+    </footer>
+  </main>
 </AltLayout>
 
 <style>
+  .bar,
   .project {
-    padding-top: clamp(32px, 6vw, 64px);
+    position: relative;
+    z-index: 1;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding-left: clamp(16px, 4vw, 40px);
+    padding-right: clamp(16px, 4vw, 40px);
+  }
+  .bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 24px;
   }
   .back {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: 14px;
-    color: var(--body);
+    gap: 8px;
+    padding: 8px 14px 8px 10px;
+    border-radius: 999px;
+    font-weight: 600;
     text-decoration: none;
+    transition: background-color 0.2s;
   }
   .back:hover {
-    color: var(--ink);
+    background: var(--tint);
+  }
+  .back :global(.back-icon) {
+    transition: transform 0.35s var(--spring);
+  }
+  .back:hover :global(.back-icon) {
+    transform: translateX(-4px);
+  }
+  .theme {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: transform 0.35s var(--spring), background-color 0.2s;
+  }
+  .theme:hover {
+    background: var(--grape-soft);
+    transform: rotate(-12deg);
+  }
+  .theme :global(.icon) {
+    width: 20px;
+    height: 20px;
+  }
+  .theme :global(.moon) {
+    display: none;
+  }
+  :global(:root[data-theme='dark']) .theme :global(.sun) {
+    display: none;
+  }
+  :global(:root[data-theme='dark']) .theme :global(.moon) {
+    display: block;
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .theme :global(.sun) {
+      display: none;
+    }
+    :global(:root:not([data-theme='light'])) .theme :global(.moon) {
+      display: block;
+    }
   }
   .head {
-    display: grid;
-    gap: 20px;
-    margin: 32px 0 48px;
-    max-width: 52rem;
+    padding: clamp(40px, 7vw, 80px) 0 32px;
+    max-width: 46rem;
+  }
+  .kick-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .title {
+    margin-top: 18px;
+    font-size: clamp(2.6rem, 6vw, 4.4rem);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+  .summary {
+    margin-top: 18px;
+    font-size: clamp(1.1rem, 1.8vw, 1.3rem);
+    color: var(--ink-2);
   }
   .facts {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    margin: 0 0 64px;
-    border-top: 1px solid var(--hairline);
-    border-bottom: 1px solid var(--hairline);
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin: 0 0 56px;
   }
-  .facts > div {
-    padding: 20px 24px 22px 0;
+  .fact {
+    padding: 18px 20px;
+    border-radius: 18px;
   }
-  .facts > div + div {
-    padding-left: 24px;
-    border-left: 1px solid var(--hairline);
+  .f-grape {
+    background: var(--grape-soft);
+  }
+  .f-teal {
+    background: var(--teal-soft);
+  }
+  .f-sun {
+    background: var(--sun-soft);
   }
   dt {
     font-size: 13px;
-    color: var(--mute);
-    margin-bottom: 6px;
+    font-weight: 700;
+    color: var(--ink-3);
+    margin-bottom: 4px;
   }
   dd {
     margin: 0;
-    font-size: 15px;
-  }
-  dd a {
-    text-decoration: underline;
-    text-decoration-color: var(--hairline-strong);
+    font-weight: 600;
   }
   .commit {
     display: block;
-    margin-top: 4px;
+    margin-top: 2px;
     font-family: var(--mono);
     font-size: 12px;
-    color: var(--mute);
+    font-weight: 400;
+    color: var(--ink-3);
   }
   .body {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 24rem);
-    gap: clamp(40px, 6vw, 80px);
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: clamp(32px, 5vw, 64px);
     align-items: start;
   }
   .prose {
-    max-width: 40rem;
-    color: var(--body);
+    color: var(--ink-2);
     font-size: 17px;
   }
   .prose :global(h2) {
-    font-size: 1.375rem;
-    letter-spacing: -0.03em;
-    margin: 48px 0 14px;
+    color: var(--ink);
+    font-size: 1.6rem;
+    margin: 44px 0 12px;
   }
   .prose :global(h2:first-child) {
     margin-top: 0;
   }
   .prose :global(p),
   .prose :global(ul) {
-    margin: 0 0 16px;
+    margin: 0 0 14px;
   }
   .prose :global(ul) {
     padding-left: 1.2rem;
   }
   .prose :global(li) {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
   .prose :global(li::marker) {
-    color: var(--mute);
+    color: var(--tangerine);
   }
   .prose :global(strong) {
     color: var(--ink);
-    font-weight: 500;
   }
   .overview {
     position: sticky;
-    top: 96px;
-    padding: 28px;
+    top: 24px;
+    padding: 24px;
+    border-radius: 22px;
     background: var(--surface);
-    border-radius: 12px;
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-md), inset 0 0 0 1px var(--line);
   }
   .ov-title {
-    font-size: 1rem;
-    letter-spacing: -0.02em;
-    margin-bottom: 12px;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
   }
   .ov-body {
-    font-size: 15px;
-    color: var(--body);
+    font-size: 15.5px;
+    color: var(--ink-2);
   }
   .ov-body :global(p + p) {
-    margin-top: 12px;
+    margin-top: 10px;
   }
   .code {
-    margin-top: clamp(72px, 10vw, 112px);
+    margin-top: clamp(56px, 8vw, 88px);
   }
-  .code-head {
+  .drawer {
+    border-radius: 24px;
+    background: var(--tint);
+  }
+  summary {
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 22px 24px;
+    cursor: pointer;
+    border-radius: 24px;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  .drawer-title {
+    font-size: 1.5rem;
+  }
+  .drawer-note {
+    display: block;
+    margin-top: 2px;
+    color: var(--ink-3);
+    font-size: 15px;
+  }
+  .drawer-btn {
     display: grid;
-    gap: 12px;
-    margin-bottom: 32px;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--ground);
+    transition: transform 0.4s var(--spring);
+  }
+  .drawer-btn :global(.icon) {
+    width: 20px;
+    height: 20px;
+  }
+  summary:hover .drawer-btn {
+    transform: scale(1.08);
+  }
+  .drawer[open] .drawer-btn {
+    transform: rotate(90deg);
+  }
+  .drawer-body {
+    padding: 0 12px 16px;
   }
   .draft {
-    margin-top: 12px;
+    margin: 12px 12px 0;
     font-size: 13px;
-    color: #b45309;
+    color: var(--tangerine-ink);
   }
-  @media (max-width: 960px) {
+  .foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    margin-top: 64px;
+    padding: 28px 0 56px;
+    border-top: 1px solid var(--line);
+    font-size: 1.2rem;
+    font-weight: 700;
+    font-family: var(--display);
+  }
+  @media (max-width: 860px) {
     .body {
       grid-template-columns: minmax(0, 1fr);
     }
     .overview {
       position: static;
-    }
-  }
-  @media (max-width: 640px) {
-    .facts > div + div {
-      padding-left: 0;
-      border-left: 0;
-      border-top: 1px solid var(--hairline);
     }
   }
 </style>
