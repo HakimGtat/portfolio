@@ -1,5 +1,5 @@
 {
-  "reviewed": false,
+  "reviewed": true,
   "model": "hand-written starter draft",
   "commit": "605b5e3b54a9630d168333d9f2a14068cb8e4a4d",
   "overview": "Every project page is built ahead of time, at [[build time]], from two files: one I write by hand (the problem, my role, the results) and one that holds the walkthrough you're reading now.\n\nThe walkthrough starts as a draft from an [[llm|LLM]]. A script hands Claude the project's code with every line numbered and asks for a reply in a fixed shape. I review and edit that draft. When the site builds, it pulls the code at an exact [[commit sha|commit SHA]], checks that every note still points at lines that exist, and only then turns it into a page. In the browser, one small interactive [[island]] (the code viewer) does the highlighting.",
