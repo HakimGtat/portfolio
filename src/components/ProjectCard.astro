@@ -11,7 +11,7 @@ const { title, summary, stack, results, demo } = project.data;
 const preview = demo?.type === 'image' ? demo.src : demo?.poster;
 ---
 
-<a class="card" href={`/projects/${project.id}/`}>
+<a class="card" href={`/notebook/projects/${project.id}/`}>
   <span class="trace" aria-hidden="true"><span class="packet"></span></span>
   <div class="card-top">
     <span class="idx">{String(index + 1).padStart(2, '0')}</span>
