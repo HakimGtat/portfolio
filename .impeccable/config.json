@@ -62,6 +62,15 @@
         ],
         "createdAt": "2026-11-04T01:28:51.573Z",
         "reason": "User confirmed: picked 'Playful micro-interactions' (buttons that bounce) in the 2026-11-03 interview"
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "var(--spring)",
+        "files": [
+          "src/alt/Machine.astro"
+        ],
+        "createdAt": "2026-11-04T04:40:06.880Z",
+        "reason": "User confirmed: picked 'Playful micro-interactions' (buttons that bounce) in the 2026-11-03 interview; same spring token as the existing exception"
       }
     ]
   }

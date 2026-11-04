@@ -5,6 +5,7 @@ import { getCollection } from 'astro:content';
 import AltLayout from '../alt/AltLayout.astro';
 import Machine from '../alt/Machine.astro';
 import Icon from '../alt/Icon.astro';
+import CopyEmail from '../alt/CopyEmail.astro';
 import { site } from '../data/site';
 
 const live = (
@@ -12,67 +13,54 @@ const live = (
 ).sort((a, b) => a.data.order - b.data.order);
 
 type Colour = 'grape' | 'teal' | 'tangerine' | 'sun';
-interface Project {
-  title: string;
-  summary: string;
-  automates: string;
-  tags: string[];
-  colour: Colour;
-  href?: string;
-  result?: string;
-}
 
-const projects: Project[] = [
-  ...live.map((p) => ({
-    title: p.data.title,
-    summary: p.data.summary,
-    automates: 'Code explanations: drafted by AI, checked by the build',
-    tags: p.data.stack.slice(0, 4),
-    colour: 'grape' as Colour,
-    href: `/projects/${p.id}/`,
-  })),
-  // Resume projects still being written up. Facts only, from the resume.
+// Resume projects still being written up. Facts only, from the resume; tags in plain words.
+const upcoming = [
   {
+    id: 'proj-prefetch',
     title: 'Markov prefetcher',
-    summary: 'Predicts the next memory address a program needs and loads it into cache before it is asked for.',
-    automates: 'Guessing what the CPU needs next',
-    tags: ['C++', 'Linux', 'MacSim'],
-    colour: 'teal',
     result: '−30% average memory access time',
+    summary: 'Predicts the next memory address a program needs and loads it into cache before it is asked for.',
+    tags: ['C++', 'Linux', 'CPU simulator'],
+    colour: 'teal' as Colour,
   },
   {
-    title: 'LiDAR room scanner',
-    summary: 'A microcontroller turns a distance sensor through 360° and maps the room from the readings.',
-    automates: 'Measuring a room by hand',
-    tags: ['Embedded C', 'MSP432', 'Matplotlib'],
-    colour: 'tangerine',
-  },
-  {
+    id: 'proj-breezy',
     title: 'Breezy smart fan',
-    summary: 'A fan that finds people with an on-device vision model and aims itself at them. I built the motor control.',
-    automates: 'Pointing a fan at whoever is in the room',
-    tags: ['Python', 'Raspberry Pi', 'TensorFlow Lite'],
-    colour: 'sun',
     result: 'Tracks people at 25 FPS',
+    summary: 'A fan that finds people with an on-device vision model and aims itself at them. I built the motor control.',
+    tags: ['Python', 'Raspberry Pi', 'Computer vision'],
+    colour: 'sun' as Colour,
   },
   {
+    id: 'proj-lidar',
+    title: 'LiDAR room scanner',
+    result: 'Full 360° room scans',
+    summary: 'A microcontroller turns a distance sensor all the way round and maps the room from the readings.',
+    tags: ['Embedded C', 'Microcontroller', 'Python plots'],
+    colour: 'tangerine' as Colour,
+  },
+  {
+    id: 'proj-network',
     title: 'Network servers',
-    summary: 'Client and server programs that talk over TCP and UDP, on both IPv4 and IPv6.',
-    automates: 'Moving data between machines reliably',
-    tags: ['Python', 'TCP/UDP', 'Sockets'],
-    colour: 'teal',
+    result: 'TCP and UDP, IPv4 and IPv6',
+    summary: 'Client and server programs that move data between machines over both kinds of connection.',
+    tags: ['Python', 'Networking', 'Sockets'],
+    colour: 'teal' as Colour,
   },
   {
+    id: 'proj-image',
     title: 'Image decompressor',
-    summary: 'Hardware that rebuilds a compressed image step by step, written as finite state machines.',
-    automates: 'Turning compressed data back into pixels',
-    tags: ['SystemVerilog', 'FSMs', 'VGA'],
-    colour: 'grape',
+    result: 'Built in hardware',
+    summary: 'A chip design that rebuilds a compressed image step by step, written as a set of state machines.',
+    tags: ['SystemVerilog', 'Digital hardware'],
+    colour: 'grape' as Colour,
   },
 ];
 
 const career = [
   {
+    id: 'career-pepsi',
     when: '2025 – 2026',
     role: 'Warehouse Supervisor',
     org: 'Pepsi',
@@ -86,15 +74,18 @@ const career = [
     tags: ['SAP', 'Azure', 'Power BI', 'Excel'],
   },
   {
+    id: 'career-mcmaster',
     when: 'Dec 2024',
     role: 'B.Eng. Computer Engineering',
     org: 'McMaster University',
     place: 'Hamilton',
     colour: 'grape' as Colour,
+    edu: true,
     points: ['Embedded systems, computer architecture, networking and hardware design projects.'],
     tags: ['C', 'C++', 'Python', 'SystemVerilog'],
   },
   {
+    id: 'career-thermo',
     when: '2022 – 2023',
     role: 'Reliability Engineer Intern',
     org: 'Thermo Fisher Scientific',
@@ -108,6 +99,7 @@ const career = [
     tags: ['Python', 'SQL', 'Power BI', 'IBM Maximo'],
   },
   {
+    id: 'career-pryor',
     when: '2022',
     role: 'CNC Machine Operator',
     org: 'Pryor Metals',
@@ -123,6 +115,7 @@ const nav = [
   { id: 'projects', label: 'Projects' },
   { id: 'about', label: 'About' },
   { id: 'career', label: 'Career path' },
+  { id: 'contact', label: 'Contact' },
 ];
 ---
 
@@ -130,17 +123,17 @@ const nav = [
   <div class="page">
     <header class="side">
       <div class="side-top">
-        <p class="hello"><span class="wave" aria-hidden="true"></span> Hi, I'm {site.name}</p>
-        <h1 class="headline">I automate the boring parts.</h1>
+        <p class="status"><span class="dot" aria-hidden="true"></span> Open to work · {site.location.replace(', ON', '')}</p>
+        <h1 class="name">{site.name}</h1>
+        <p class="role">Computer engineer</p>
+        <p class="headline">I automate the boring parts.</p>
         <p class="pitch">
-          Computer engineer in Ottawa. I build tools that clean up data, sort out tasks and run hardware, so
-          people can spend their time on the interesting work.
+          I build tools that clean up data, sort out tasks and run hardware, so people can spend their time on the
+          interesting work.
         </p>
-        <p class="roles">
-          <span class="pill pill-teal">Data analysis</span>
-          <span class="pill pill-tangerine">IT support</span>
-          <span class="pill pill-grape">Automation</span>
-          <span class="pill pill-sun">Embedded &amp; systems</span>
+        <p class="looking">
+          <span class="looking-label">Looking for</span>
+          Data analysis · IT support · Automation · Embedded &amp; systems roles
         </p>
 
         <nav class="toc" aria-label="Sections">
@@ -160,18 +153,21 @@ const nav = [
       </div>
 
       <div class="side-bottom">
-        <a class="btn btn-primary" href={`mailto:${site.email}`}>
-          Say hello <Icon name="arrow-right" class="icon-nudge" />
-        </a>
-        <div class="socials">
-          <a class="social" href={site.github} aria-label="GitHub"><Icon name="github" /></a>
-          <a class="social" href={site.linkedin} aria-label="LinkedIn"><Icon name="linkedin" /></a>
-          {hasResume && <a class="social" href={site.resumePath} download aria-label="Download resume"><Icon name="download" /></a>}
-          <button type="button" class="social" aria-label="Switch light or dark theme" data-theme-toggle>
-            <Icon name="sun" class="sun" />
-            <Icon name="moon" class="moon" />
-          </button>
+        <div class="side-actions">
+          <a class="btn btn-primary" href={`mailto:${site.email}`}>
+            Say hello <Icon name="arrow-right" class="icon-nudge" />
+          </a>
+          <div class="socials">
+            <a class="social" href={site.github} aria-label="GitHub"><Icon name="github" /></a>
+            <a class="social" href={site.linkedin} aria-label="LinkedIn"><Icon name="linkedin" /></a>
+            {hasResume && <a class="social" href={site.resumePath} download aria-label="Download resume"><Icon name="download" /></a>}
+            <button type="button" class="social" data-theme-toggle aria-label="Switch to dark theme">
+              <Icon name="sun" class="sun" />
+              <Icon name="moon" class="moon" />
+            </button>
+          </div>
         </div>
+        <CopyEmail />
       </div>
     </header>
 
@@ -180,35 +176,48 @@ const nav = [
 
       <section id="projects" class="section" aria-labelledby="projects-title">
         <h2 id="projects-title" class="section-title">Projects</h2>
-        <ul class="cards" role="list">
+
+        <ul class="featured" role="list">
           {
-            projects.map((p) => {
-              const Tag = p.href ? 'a' : 'article';
-              return (
-                <li>
-                  <Tag class:list={['card', `c-${p.colour}`, { 'is-link': p.href }]} href={p.href}>
-                    <span class="card-dot" aria-hidden="true" />
-                    <div class="card-body">
-                      <h3 class="card-title">
-                        {p.title}
-                        {p.href && <Icon name="arrow-right" class="card-arrow" />}
-                      </h3>
-                      <p class="card-automates">Automates: {p.automates}</p>
-                      <p class="card-sum">{p.summary}</p>
-                      {p.result && <p class="card-result">{p.result}</p>}
-                      <p class="card-tags">
-                        {p.tags.map((t) => (
-                          <span class="pill">{t}</span>
-                        ))}
-                        <span class:list={['card-status', { live: p.href }]}>
-                          {p.href ? 'Full write-up and code' : 'Write-up coming soon'}
-                        </span>
-                      </p>
-                    </div>
-                  </Tag>
-                </li>
-              );
-            })
+            live.map((p) => (
+              <li>
+                <a class="feature" href={`/projects/${p.id}/`} aria-label={`Read the write-up: ${p.data.title}`}>
+                  <span class="feature-badge pill pill-grape">Full write-up and code</span>
+                  <h3 class="feature-title">{p.data.title}</h3>
+                  <p class="feature-sum">{p.data.summary}</p>
+                  <p class="feature-meta">
+                    {p.data.stack.slice(0, 4).map((t) => (
+                      <span class="pill">{t}</span>
+                    ))}
+                  </p>
+                  <span class="feature-cta">
+                    Read the write-up <Icon name="arrow-right" />
+                  </span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+
+        <div class="resume-head">
+          <h3 class="resume-title">From my resume</h3>
+          <p class="resume-note">Write-ups with code are on the way.</p>
+        </div>
+        <ul class="resume-list" role="list">
+          {
+            upcoming.map((p) => (
+              <li id={p.id} class={`rp c-${p.colour}`}>
+                <span class="rp-dot" aria-hidden="true" />
+                <div>
+                  <p class="rp-top">
+                    <span class="rp-title">{p.title}</span>
+                    <span class="rp-result">{p.result}</span>
+                  </p>
+                  <p class="rp-sum">{p.summary}</p>
+                  <p class="rp-tags">{p.tags.join(' · ')}</p>
+                </div>
+              </li>
+            ))
           }
         </ul>
       </section>
@@ -239,9 +248,12 @@ const nav = [
         <ol class="timeline" role="list">
           {
             career.map((c) => (
-              <li class={`step c-${c.colour}`}>
+              <li id={c.id} class:list={['step', `c-${c.colour}`, { 'is-edu': c.edu }]}>
                 <span class="step-dot" aria-hidden="true" />
-                <p class="step-when">{c.when}</p>
+                <p class="step-when">
+                  {c.when}
+                  {c.edu && <span class="step-kind"> · Education</span>}
+                </p>
                 <div class="step-card">
                   <h3 class="step-role">
                     {c.role} <span class="step-org">· {c.org}</span>
@@ -253,7 +265,7 @@ const nav = [
                     ))}
                   </ul>
                   {c.tags.length > 0 && (
-                    <p class="card-tags">
+                    <p class="step-tags">
                       {c.tags.map((t) => (
                         <span class="pill">{t}</span>
                       ))}
@@ -266,14 +278,38 @@ const nav = [
         </ol>
       </section>
 
+      <section id="contact" class="section contact" aria-labelledby="contact-title">
+        <h2 id="contact-title" class="contact-title">Hiring for data, IT or automation?</h2>
+        <p class="contact-text">
+          I'd love to hear about it. Email is the fastest way to reach me, and I usually reply within a day.
+        </p>
+        <div class="contact-actions">
+          <a class="btn btn-primary" href={`mailto:${site.email}`}>
+            Say hello <Icon name="arrow-right" class="icon-nudge" />
+          </a>
+          <CopyEmail large />
+        </div>
+        <p class="contact-links">
+          <a href={site.linkedin}>LinkedIn</a>
+          <a href={site.github}>GitHub</a>
+          {hasResume && <a href={site.resumePath} download>Resume (PDF)</a>}
+        </p>
+      </section>
+
       <footer class="foot">
         <p>
-          Built by me with Astro. Want the details?{' '}
+          Built by me with Astro. Curious how?{' '}
           <a href="/projects/portfolio-site/">See how this site works</a>.
         </p>
       </footer>
     </main>
   </div>
+
+  <nav class="mobile-bar" aria-label="Quick links">
+    <a href="#projects">Projects</a>
+    <a href="#career">Career</a>
+    <a class="mobile-cta" href="#contact">Contact</a>
+  </nav>
 </AltLayout>
 
 <script>
@@ -285,7 +321,12 @@ const nav = [
     (entries) => {
       for (const e of entries) {
         if (!e.isIntersecting) continue;
-        links.forEach((a, id) => a.classList.toggle('is-active', id === e.target.id));
+        links.forEach((a, id) => {
+          const on = id === e.target.id;
+          a.classList.toggle('is-active', on);
+          if (on) a.setAttribute('aria-current', 'true');
+          else a.removeAttribute('aria-current');
+        });
       }
     },
     { rootMargin: '-40% 0px -55% 0px' },
@@ -303,7 +344,7 @@ const nav = [
     display: grid;
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
     gap: clamp(32px, 5vw, 80px);
-    max-width: 1280px;
+    max-width: 1320px;
     margin: 0 auto;
     padding: 0 clamp(16px, 4vw, 56px);
   }
@@ -317,62 +358,82 @@ const nav = [
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: clamp(40px, 8vh, 88px) 0 clamp(28px, 5vh, 48px);
+    gap: 24px;
+    padding: clamp(36px, 7vh, 80px) 0 clamp(24px, 4vh, 40px);
   }
-  .hello {
-    display: flex;
+  .status {
+    display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    font-size: 14px;
     font-weight: 600;
-    color: var(--ink-2);
+    color: var(--teal-ink);
   }
-  .wave {
-    width: 14px;
-    height: 14px;
+  .dot {
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: var(--teal);
     box-shadow: 0 0 0 4px var(--teal-soft);
-    animation: pulse 2.8s ease-in-out infinite;
   }
-  @keyframes pulse {
-    50% {
-      box-shadow: 0 0 0 8px var(--teal-soft);
-    }
+  .name {
+    margin-top: 18px;
+    font-family: var(--display);
+    letter-spacing: -0.02em;
+    font-size: clamp(1.5rem, 2.2vw, 1.9rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .role {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink-2);
   }
   .headline {
-    margin-top: 16px;
-    font-size: clamp(2.6rem, 4.8vw, 4.4rem);
+    margin-top: 18px;
+    font-family: var(--display);
+    font-size: clamp(2.4rem, 4.2vw, 3.9rem);
     font-weight: 800;
+    text-wrap: balance;
     letter-spacing: -0.035em;
     line-height: 1;
   }
   .pitch {
-    margin-top: 20px;
+    margin-top: 18px;
     max-width: 26rem;
-    font-size: 18px;
+    font-size: 17.5px;
     color: var(--ink-2);
   }
-  .roles {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 20px;
+  .looking {
+    margin-top: 16px;
+    max-width: 26rem;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .looking-label {
+    display: block;
+    font-size: 13px;
+    color: var(--ink-2);
+    font-weight: 600;
+    margin-bottom: 2px;
   }
   .toc ul {
     list-style: none;
-    margin: clamp(28px, 6vh, 56px) 0 0;
+    margin: clamp(20px, 4.5vh, 44px) 0 0;
     padding: 0;
     display: grid;
-    gap: 4px;
+    gap: 2px;
   }
   .toc a {
     display: inline-flex;
     align-items: center;
     gap: 12px;
-    padding: 6px 0;
+    padding: 5px 0;
     font-size: 14px;
     font-weight: 700;
-    color: var(--ink-3);
+    color: var(--ink-2);
     text-decoration: none;
     transition: color 0.2s;
   }
@@ -393,20 +454,24 @@ const nav = [
     background: var(--tangerine);
   }
   .side-bottom {
+    display: grid;
+    gap: 12px;
+  }
+  .side-actions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
   }
   .socials {
     display: flex;
-    gap: 4px;
+    gap: 2px;
   }
   .social {
     display: grid;
     place-items: center;
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     border: 0;
     border-radius: 50%;
     background: transparent;
@@ -443,7 +508,7 @@ const nav = [
 
   /* ---------- Right: scrolling content ---------- */
   .content {
-    padding: clamp(40px, 8vh, 88px) 0 64px;
+    padding: clamp(36px, 7vh, 80px) 0 64px;
     min-width: 0;
   }
   .section {
@@ -456,103 +521,149 @@ const nav = [
     margin-bottom: 20px;
   }
 
-  /* Project cards: lift and tint on hover. */
-  .cards {
+  /* Featured write-up: the one card that opens, so the only one that lifts. */
+  .featured {
     list-style: none;
     margin: 0;
     padding: 0;
-    display: grid;
-    gap: 12px;
   }
-  .card {
-    --c: var(--grape);
-    --c-soft: var(--grape-soft);
+  .feature {
     display: grid;
-    grid-template-columns: 14px minmax(0, 1fr);
-    gap: 16px;
-    padding: 20px 22px;
-    border-radius: 20px;
+    gap: 10px;
+    padding: 26px 28px;
+    border-radius: 24px;
+    background: var(--surface);
+    box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--line);
     color: inherit;
     text-decoration: none;
-    transition: transform 0.4s var(--spring), background-color 0.25s, box-shadow 0.25s;
+    transition: transform 0.4s var(--spring), box-shadow 0.25s;
   }
-  .c-teal {
-    --c: var(--teal);
-    --c-soft: var(--teal-soft);
+  .feature:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md), inset 0 0 0 2px var(--grape);
   }
-  .c-tangerine {
-    --c: var(--tangerine);
-    --c-soft: var(--tangerine-soft);
+  .feature-badge {
+    justify-self: start;
   }
-  .c-sun {
-    --c: var(--sun);
-    --c-soft: var(--sun-soft);
-  }
-  .card:hover {
-    background: var(--surface);
-    box-shadow: var(--shadow-md);
-    transform: translateY(-3px);
-  }
-  .card.is-link:hover .card-title {
-    color: var(--grape-ink);
-  }
-  .card-dot {
-    width: 14px;
-    height: 14px;
-    margin-top: 8px;
-    border-radius: 50%;
-    background: var(--c);
-    box-shadow: 0 0 0 5px var(--c-soft);
-    transition: transform 0.4s var(--spring);
-  }
-  .card:hover .card-dot {
-    transform: scale(1.25);
-  }
-  .card-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 1.3rem;
+  .feature-title {
+    font-size: 1.6rem;
+    font-weight: 800;
     transition: color 0.2s;
   }
-  .card-title :global(.card-arrow) {
-    width: 18px;
-    height: 18px;
+  .feature:hover .feature-title {
+    color: var(--grape-ink);
+  }
+  .feature-sum {
+    color: var(--ink-2);
+    max-width: 36rem;
+  }
+  .feature-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .feature-cta {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--ground);
+    font-weight: 700;
+    font-size: 15px;
+  }
+  .feature-cta :global(.icon) {
     transition: transform 0.35s var(--spring);
   }
-  .card:hover .card-title :global(.card-arrow) {
-    transform: translate(4px, -2px) rotate(-12deg);
+  .feature:hover .feature-cta :global(.icon) {
+    transform: translateX(4px);
   }
-  .card-automates {
-    margin-top: 4px;
+
+  /* Resume projects: a compact, static list led by each result. */
+  .resume-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 16px;
+    margin: 36px 0 6px;
+  }
+  .resume-title {
+    font-size: 1.2rem;
+  }
+  .resume-note {
     font-size: 14px;
     font-weight: 600;
-    color: var(--ink-3);
-  }
-  .card-sum {
-    margin-top: 8px;
     color: var(--ink-2);
   }
-  .card-result {
-    margin-top: 8px;
+  .resume-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .rp {
+    display: grid;
+    grid-template-columns: 12px minmax(0, 1fr);
+    gap: 14px;
+    padding: 16px 0;
+    border-top: 1px solid var(--line);
+    scroll-margin-top: 80px;
+  }
+  .rp:target {
+    background: var(--sun-soft);
+    border-radius: 14px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .rp-dot {
+    width: 12px;
+    height: 12px;
+    margin-top: 7px;
+    border-radius: 50%;
+    background: var(--c, var(--grape));
+  }
+  .rp.c-teal {
+    --c: var(--teal);
+  }
+  .rp.c-tangerine {
+    --c: var(--tangerine);
+  }
+  .rp.c-sun {
+    --c: var(--sun);
+  }
+  .rp.c-grape {
+    --c: var(--grape);
+  }
+  .rp-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 12px;
+  }
+  .rp-title {
+    font-family: var(--display);
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .rp-result {
+    font-size: 14.5px;
     font-weight: 700;
     color: var(--teal-ink);
   }
-  .card-tags {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    margin-top: 12px;
+  .rp-sum {
+    margin-top: 2px;
+    color: var(--ink-2);
+    font-size: 16px;
   }
-  .card-status {
-    margin-left: auto;
-    font-size: 13px;
+  .rp-tags {
+    margin-top: 4px;
+    font-size: 13.5px;
     font-weight: 600;
-    color: var(--ink-3);
-  }
-  .card-status.live {
-    color: var(--grape-ink);
+    color: var(--ink-2);
   }
 
   /* About */
@@ -569,7 +680,7 @@ const nav = [
     gap: 8px;
   }
 
-  /* Career path: a timeline with coloured stops. */
+  /* Career path: a timeline with coloured stops; education gets a square stop. */
   .timeline {
     list-style: none;
     margin: 0;
@@ -587,10 +698,25 @@ const nav = [
     background: var(--line);
   }
   .step {
-    --c: var(--grape);
-    --c-soft: var(--grape-soft);
     position: relative;
     padding-bottom: 28px;
+    scroll-margin-top: 24px;
+  }
+  .step.c-teal {
+    --c: var(--teal);
+    --c-soft: var(--teal-soft);
+  }
+  .step.c-tangerine {
+    --c: var(--tangerine);
+    --c-soft: var(--tangerine-soft);
+  }
+  .step.c-sun {
+    --c: var(--sun);
+    --c-soft: var(--sun-soft);
+  }
+  .step.c-grape {
+    --c: var(--grape);
+    --c-soft: var(--grape-soft);
   }
   .step-dot {
     position: absolute;
@@ -602,11 +728,18 @@ const nav = [
     background: var(--c);
     box-shadow: 0 0 0 4px var(--ground), 0 0 0 7px var(--c-soft);
   }
+  .is-edu .step-dot {
+    border-radius: 4px;
+    transform: rotate(45deg);
+  }
   .step-when {
     font-size: 14px;
     font-weight: 700;
-    color: var(--ink-3);
+    color: var(--ink-2);
     font-variant-numeric: tabular-nums;
+  }
+  .step-kind {
+    color: var(--grape-ink);
   }
   .step-card {
     margin-top: 8px;
@@ -614,22 +747,20 @@ const nav = [
     border-radius: 18px;
     background: var(--surface);
     box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--line);
-    transition: transform 0.4s var(--spring), box-shadow 0.25s;
   }
-  .step-card:hover {
-    transform: translateX(4px);
-    box-shadow: var(--shadow-md), inset 0 0 0 1px var(--line);
+  .step:target .step-card {
+    box-shadow: var(--shadow-md), inset 0 0 0 2px var(--c);
   }
   .step-role {
     font-size: 1.2rem;
   }
   .step-org {
-    color: var(--ink-3);
+    color: var(--ink-2);
     font-weight: 600;
   }
   .step-place {
     font-size: 14px;
-    color: var(--ink-3);
+    color: var(--ink-2);
   }
   .step-points {
     margin: 10px 0 0;
@@ -641,17 +772,106 @@ const nav = [
   .step-points li::marker {
     color: var(--c);
   }
+  .step-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  /* Closing contact block */
+  .contact {
+    margin-top: 24px;
+    padding: clamp(28px, 4vw, 44px);
+    border-radius: 28px;
+    background: var(--grape-soft);
+  }
+  .contact-title {
+    font-size: clamp(1.7rem, 3vw, 2.4rem);
+    font-weight: 800;
+    max-width: 20ch;
+  }
+  .contact-text {
+    margin-top: 10px;
+    max-width: 34rem;
+    color: var(--ink-2);
+    font-size: 17px;
+  }
+  .contact-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 18px;
+    margin-top: 22px;
+  }
+  .contact-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin-top: 18px;
+    font-weight: 700;
+  }
+  .contact-links a {
+    color: var(--grape-ink);
+  }
 
   .foot {
-    margin-top: 48px;
+    margin-top: 40px;
     padding-top: 24px;
     border-top: 1px solid var(--line);
     font-size: 15px;
-    color: var(--ink-3);
+    color: var(--ink-2);
   }
   .foot a {
     color: var(--grape-ink);
     font-weight: 600;
+  }
+
+  /* Short laptop screens (e.g. 1366×768 minus browser bars): tighten the fixed column so
+     "Say hello" and the email always fit; scrolling inside it is the last-resort safety net. */
+  @media (min-width: 1001px) {
+    .side {
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+  }
+  @media (min-width: 1001px) and (max-height: 820px) {
+    .side {
+      padding-top: 28px;
+      padding-bottom: 20px;
+      gap: 16px;
+    }
+    .name {
+      margin-top: 12px;
+      font-size: 1.4rem;
+    }
+    .headline {
+      margin-top: 12px;
+      font-size: clamp(2.1rem, 3.4vw, 3rem);
+    }
+    .pitch {
+      margin-top: 12px;
+      font-size: 16px;
+    }
+    .looking {
+      margin-top: 10px;
+    }
+    .toc ul {
+      margin-top: 16px;
+    }
+    .toc a {
+      padding: 3px 0;
+    }
+  }
+  @media (min-width: 1001px) and (max-height: 660px) {
+    .pitch {
+      display: none;
+    }
+  }
+
+  /* Phones and tablets: quick links pinned to the bottom, within thumb reach. */
+  .mobile-bar {
+    display: none;
   }
 
   @media (max-width: 1000px) {
@@ -663,23 +883,48 @@ const nav = [
       position: static;
       height: auto;
       padding-bottom: 8px;
-      gap: 28px;
     }
     .toc {
       display: none;
     }
     .content {
-      padding-top: 32px;
+      padding-top: 28px;
+      padding-bottom: 96px;
+    }
+    .mobile-bar {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: calc(12px + env(safe-area-inset-bottom));
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow-md), inset 0 0 0 1px var(--line);
+    }
+    .mobile-bar a {
+      flex: 1;
+      display: grid;
+      place-items: center;
+      min-height: 44px;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .mobile-bar .mobile-cta {
+      background: var(--ink);
+      color: var(--ground);
     }
   }
   @media (max-width: 520px) {
-    .card {
-      padding: 16px 4px;
-      gap: 12px;
-    }
-    .card-status {
-      margin-left: 0;
-      width: 100%;
+    .feature {
+      padding: 20px;
     }
   }
 </style>

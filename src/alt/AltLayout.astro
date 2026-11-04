@@ -43,15 +43,33 @@ const pageTitle = title ? `${title} · ${site.name}` : `${site.name} · I automa
       const isDark = () =>
         root.dataset.theme === 'dark' ||
         (!root.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
-      document.querySelectorAll('[data-theme-toggle]').forEach((btn) =>
+      const toggles = document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]');
+      const metas = document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]');
+
+      // Keep the toggle's label and the browser bar colour in step with the theme actually shown.
+      function syncTheme() {
+        const dark = isDark();
+        toggles.forEach((b) => b.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme'));
+        const bg = getComputedStyle(document.body).backgroundColor;
+        metas.forEach((m) => {
+          m.removeAttribute('media');
+          m.content = bg;
+        });
+      }
+
+      toggles.forEach((btn) =>
         btn.addEventListener('click', () => {
           const next = isDark() ? 'light' : 'dark';
           root.dataset.theme = next;
           try {
             localStorage.setItem('theme', next);
           } catch {}
+          syncTheme();
         }),
       );
+      syncTheme();
+      // Following the device's theme? Then keep label and bar colour right if it changes mid-visit.
+      matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncTheme);
 
       // Soft light that follows the cursor.
       if (matchMedia('(pointer: fine)').matches) {

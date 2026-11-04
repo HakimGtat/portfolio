@@ -1,6 +1,7 @@
 ---
 // The signature toy: pick a job, press Run, and the little machine turns messy input into a tidy
-// result. All data here is sample data, labelled as such on the card.
+// result, then points at where Hakim did the same thing for real. All data here is sample data,
+// labelled as such on the card.
 import Icon from './Icon.astro';
 
 const jobs = {
@@ -8,19 +9,22 @@ const jobs = {
     label: 'Spreadsheet',
     role: 'Data',
     input: ['  jan , 1200 ', 'FEB,980', 'Mar ;1 340', 'feb,980', 'APR, —', 'may,1510 '],
-    status: 'Cleaned 6 messy rows into 4: fixed the formats, dropped a duplicate and a blank.',
+    status: 'Cleaned 6 messy rows into 5: fixed the formats, dropped a duplicate and flagged a missing value.',
+    real: { text: 'For real: my SQL and Power BI pipeline made KPI reporting 80% faster', href: '#career-thermo' },
   },
   tickets: {
     label: 'Support tickets',
     role: 'IT support',
     input: ['printer jammed again', "CAN'T LOG IN", 'server down!!!', 'need a new mouse', 'vpn really slow', "can't log in (2nd)"],
     status: 'Sorted 6 tickets into 5 by priority and merged the duplicate login report.',
+    real: { text: 'For real: I led root cause investigations on equipment failures at Thermo Fisher', href: '#career-thermo' },
   },
   sensor: {
     label: 'Sensor data',
     role: 'Engineering',
     input: ['θ=0° d=1.24m', '45,1.80', 'θ=90° 1.10m', '135° d=?', '180:1.31', 'θ=225 1.77', '270°,1.15', '315 1.62m'],
     status: 'Mapped 7 of 8 distance readings into a room outline and dropped 1 bad reading.',
+    real: { text: 'For real: my LiDAR scanner maps a room with a microcontroller', href: '#proj-lidar' },
   },
 };
 ---
@@ -28,17 +32,22 @@ const jobs = {
 <section class="machine-card" aria-labelledby="machine-title" data-machine>
   <script type="application/json" data-jobs set:html={JSON.stringify(jobs)} />
   <div class="mc-head">
-    <div>
-      <h2 id="machine-title" class="mc-title">Try it: give the machine a boring job.</h2>
-      <p class="mc-sub">Pick one, then press Run. <span class="pill">Sample data</span></p>
-    </div>
+    <h2 id="machine-title" class="mc-title">Give the machine a boring job.</h2>
+    <p class="mc-sub">Pick one, then press Run. <span class="pill">Sample data</span></p>
   </div>
 
   <div class="mc-controls">
     <div class="jobs" role="radiogroup" aria-label="Choose a job">
       {
         Object.entries(jobs).map(([id, j], i) => (
-          <button type="button" class="job" role="radio" aria-checked={i === 0 ? 'true' : 'false'} data-job={id}>
+          <button
+            type="button"
+            class="job"
+            role="radio"
+            aria-checked={i === 0 ? 'true' : 'false'}
+            tabindex={i === 0 ? '0' : '-1'}
+            data-job={id}
+          >
             <span class="job-role">{j.role}</span>
             {j.label}
           </button>
@@ -52,9 +61,9 @@ const jobs = {
   </div>
 
   <div class="stage">
-    <div class="tray tray-in" aria-label="Messy input">
-      <p class="tray-label">In</p>
-      <ul class="chips" data-in role="list"></ul>
+    <div class="tray tray-in" role="group" aria-labelledby="tray-in-label">
+      <p class="tray-label" id="tray-in-label">In: messy</p>
+      <ul class="chips" data-in aria-label="Sample messy input"></ul>
     </div>
 
     <div class="bot" data-bot aria-hidden="true">
@@ -78,37 +87,52 @@ const jobs = {
       </svg>
     </div>
 
-    <div class="tray tray-out" aria-label="Tidy output">
-      <p class="tray-label">Out</p>
+    <div class="tray tray-out" role="group" aria-labelledby="tray-out-label">
+      <p class="tray-label" id="tray-out-label">Out: tidy</p>
       <div class="out" data-out>
         <p class="out-empty">The tidy result lands here.</p>
       </div>
     </div>
   </div>
 
-  <p class="status" data-status aria-live="polite"></p>
+  <div class="after">
+    <p class="status" data-status aria-live="polite"></p>
+    <a class="real" data-real href="#career" hidden>
+      <span data-real-text></span>
+      <Icon name="arrow-right" />
+    </a>
+  </div>
 </section>
 
 <script>
-  type Job = { label: string; role: string; input: string[]; status: string };
+  type Job = { label: string; role: string; input: string[]; status: string; real: { text: string; href: string } };
 
   const ROT = [-6, 4, -2, 7, -4, 3, -7, 5];
 
   function renderOutput(job: string): string {
     if (job === 'sheet') {
-      const rows: [string, string][] = [
-        ['Jan', '1,200'],
-        ['Feb', '980'],
-        ['Mar', '1,340'],
-        ['May', '1,510'],
+      const rows: [string, number | null][] = [
+        ['Jan', 1200],
+        ['Feb', 980],
+        ['Mar', 1340],
+        ['Apr', null],
+        ['May', 1510],
       ];
       const max = 1510;
+      const fmt = (v: number | null) => (v === null ? 'n/a' : v.toLocaleString('en-CA'));
       return `
         <table class="o-table"><thead><tr><th>Month</th><th>Units</th></tr></thead><tbody>
-        ${rows.map(([m, v]) => `<tr class="o-item"><td>${m}</td><td>${v}</td></tr>`).join('')}
+        ${rows
+          .map(([m, v]) => `<tr class="o-item${v === null ? ' o-missing' : ''}"><td>${m}</td><td>${fmt(v)}</td></tr>`)
+          .join('')}
         </tbody></table>
         <div class="o-bars o-item" aria-hidden="true">
-        ${rows.map(([m, v]) => `<span style="--h:${(Number(v.replace(',', '')) / max) * 100}%"><i></i><b>${m}</b></span>`).join('')}
+        ${rows
+          .map(
+            ([m, v]) =>
+              `<span><span class="o-track">${v === null ? '<em>n/a</em>' : `<i style="height:${(v / max) * 100}%"></i>`}</span><b>${m}</b></span>`,
+          )
+          .join('')}
         </div>`;
     }
     if (job === 'tickets') {
@@ -120,10 +144,10 @@ const jobs = {
         ['P4', 'New mouse', 'grape'],
       ];
       return `<ol class="o-queue">${q
-        .map(([p, t, c]) => `<li class="o-item"><span class="pill pill-${c}">${p}</span>${t}</li>`)
+        .map(([p, t, c]) => `<li class="o-item"><span class="pill pill-${c}">${p}</span><span>${t}</span></li>`)
         .join('')}</ol>`;
     }
-    // sensor: polar readings to points; 135° was the bad reading.
+    // sensor: polar readings to points; 135° was the bad reading. Rings mark 1 m and 2 m.
     const pts: [number, number][] = [
       [0, 1.24],
       [45, 1.8],
@@ -136,12 +160,16 @@ const jobs = {
     const s = 34;
     const xy = pts.map(([a, d]) => {
       const r = (a * Math.PI) / 180;
-      return [80 + Math.cos(r) * d * s, 70 - Math.sin(r) * d * s];
+      return [80 + Math.cos(r) * d * s, 72 - Math.sin(r) * d * s];
     });
-    return `<svg class="o-map" viewBox="0 0 160 140" role="img" aria-label="Room outline from 7 distance readings">
+    return `<svg class="o-map" viewBox="0 0 160 150" role="img" aria-label="Room outline from 7 distance readings, about 2.5 by 3 metres">
+      <circle class="o-ring" cx="80" cy="72" r="${s}"></circle>
+      <circle class="o-ring" cx="80" cy="72" r="${s * 2}"></circle>
       <polygon class="o-room o-item" points="${xy.map((p) => p.join(',')).join(' ')}"></polygon>
       ${xy.map(([x, y]) => `<circle class="o-pt o-item" cx="${x}" cy="${y}" r="4"></circle>`).join('')}
-      <circle class="o-sensor" cx="80" cy="70" r="5"></circle>
+      <circle class="o-sensor" cx="80" cy="72" r="5"></circle>
+      <line class="o-scale" x1="10" y1="142" x2="${10 + s}" y2="142"></line>
+      <text class="o-scale-label" x="${14 + s}" y="145">1 m</text>
     </svg>`;
   }
 
@@ -153,6 +181,8 @@ const jobs = {
     const runBtn = card.querySelector<HTMLButtonElement>('[data-run]')!;
     const runLabel = card.querySelector<HTMLElement>('[data-run-label]')!;
     const status = card.querySelector<HTMLElement>('[data-status]')!;
+    const real = card.querySelector<HTMLAnchorElement>('[data-real]')!;
+    const realText = card.querySelector<HTMLElement>('[data-real-text]')!;
     const jobBtns = [...card.querySelectorAll<HTMLButtonElement>('[data-job]')];
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     let job = 'sheet';
@@ -164,15 +194,27 @@ const jobs = {
         .join('');
       out.innerHTML = '<p class="out-empty">The tidy result lands here.</p>';
       status.textContent = '';
+      real.hidden = true;
       bot.classList.remove('is-done');
       runLabel.textContent = 'Run';
       state = 'idle';
     }
 
+    // Busy controls stay focusable (aria-disabled), so keyboard focus never jumps away mid-run.
+    function setBusy(busy: boolean) {
+      card.classList.toggle('is-busy', busy);
+      runBtn.setAttribute('aria-disabled', String(busy));
+      jobBtns.forEach((b) => b.setAttribute('aria-disabled', String(busy)));
+    }
+
     function pick(id: string) {
       if (state === 'running') return;
       job = id;
-      jobBtns.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.job === id)));
+      jobBtns.forEach((b) => {
+        const on = b.dataset.job === id;
+        b.setAttribute('aria-checked', String(on));
+        b.tabIndex = on ? 0 : -1;
+      });
       setInputs();
     }
 
@@ -180,10 +222,17 @@ const jobs = {
       if (state === 'running') return;
       if (state === 'done') setInputs();
       state = 'running';
-      runBtn.disabled = true;
-      jobBtns.forEach((b) => (b.disabled = true));
+      setBusy(true);
       runLabel.textContent = 'Running…';
       bot.classList.add('is-running');
+      // If the stage isn't fully on screen (narrow layouts stack it below the controls), bring it into
+      // view so the visitor sees the result, clear of the phone's bottom bar.
+      const outTray = card.querySelector<HTMLElement>('.tray-out')!;
+      const box = outTray.getBoundingClientRect();
+      if (box.top < 0 || box.bottom > innerHeight - 80) {
+        outTray.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' });
+        if (!reduced) await new Promise((r) => setTimeout(r, 350));
+      }
 
       const chips = [...inList.querySelectorAll<HTMLElement>('.chip')];
       if (!reduced) {
@@ -195,16 +244,14 @@ const jobs = {
             const r = chip.getBoundingClientRect();
             const dx = tx - (r.left + r.width / 2);
             const dy = ty - (r.top + r.height / 2);
-            return chip
-              .animate(
-                [
-                  { transform: `rotate(${ROT[i % ROT.length]}deg)`, opacity: 1 },
-                  { transform: `translate(${dx * 0.6}px, ${dy - 40}px) rotate(0deg) scale(0.8)`, opacity: 1, offset: 0.6 },
-                  { transform: `translate(${dx}px, ${dy}px) scale(0.2)`, opacity: 0 },
-                ],
-                { duration: 700, delay: i * 110, easing: 'cubic-bezier(0.5, 0, 0.75, 0)', fill: 'forwards' },
-              )
-              .finished;
+            return chip.animate(
+              [
+                { transform: `rotate(${ROT[i % ROT.length]}deg)`, opacity: 1 },
+                { transform: `translate(${dx * 0.6}px, ${dy - 40}px) rotate(0deg) scale(0.8)`, opacity: 1, offset: 0.6 },
+                { transform: `translate(${dx}px, ${dy}px) scale(0.2)`, opacity: 0 },
+              ],
+              { duration: 700, delay: i * 110, easing: 'cubic-bezier(0.5, 0, 0.75, 0)', fill: 'forwards' },
+            ).finished;
           }),
         );
         await new Promise((r) => setTimeout(r, 450));
@@ -212,9 +259,8 @@ const jobs = {
       inList.innerHTML = '<li class="in-done">All done. Nothing left to do by hand.</li>';
 
       out.innerHTML = renderOutput(job);
-      const items = [...out.querySelectorAll<HTMLElement | SVGElement>('.o-item')];
       if (!reduced) {
-        items.forEach((el, i) =>
+        out.querySelectorAll<HTMLElement | SVGElement>('.o-item').forEach((el, i) =>
           el.animate(
             [
               { opacity: 0, transform: 'translateY(10px) scale(0.92)' },
@@ -227,18 +273,22 @@ const jobs = {
       bot.classList.remove('is-running');
       bot.classList.add('is-done');
       status.textContent = jobs[job].status;
+      realText.textContent = jobs[job].real.text;
+      real.href = jobs[job].real.href;
+      real.hidden = false;
       runLabel.textContent = 'Run again';
-      runBtn.disabled = false;
-      jobBtns.forEach((b) => (b.disabled = false));
+      setBusy(false);
       state = 'done';
     }
 
     jobBtns.forEach((b) => b.addEventListener('click', () => pick(b.dataset.job!)));
     card.querySelector('.jobs')!.addEventListener('keydown', (e) => {
       const k = (e as KeyboardEvent).key;
-      if (k !== 'ArrowRight' && k !== 'ArrowLeft') return;
+      const step = k === 'ArrowRight' || k === 'ArrowDown' ? 1 : k === 'ArrowLeft' || k === 'ArrowUp' ? -1 : 0;
+      if (!step || state === 'running') return;
+      e.preventDefault();
       const i = jobBtns.findIndex((b) => b.dataset.job === job);
-      const next = jobBtns[(i + (k === 'ArrowRight' ? 1 : jobBtns.length - 1)) % jobBtns.length];
+      const next = jobBtns[(i + step + jobBtns.length) % jobBtns.length];
       pick(next.dataset.job!);
       next.focus();
     });
@@ -250,17 +300,37 @@ const jobs = {
 <style>
   .machine-card {
     position: relative;
-    padding: clamp(20px, 3vw, 32px);
-    border-radius: 28px;
+    padding: clamp(20px, 3vw, 36px);
+    border-radius: 32px;
     background: var(--surface);
     box-shadow: var(--shadow-md), inset 0 0 0 1px var(--line);
+    overflow: hidden;
+    /* The stage lays itself out by the card's own width, not the screen's. */
+    container-type: inline-size;
+  }
+  /* A soft "factory floor" glow behind the machine, so it reads as a scene rather than a widget. */
+  .machine-card::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 42%;
+    width: 560px;
+    height: 560px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: radial-gradient(closest-side, var(--sun-soft), transparent);
+    pointer-events: none;
+  }
+  .machine-card > * {
+    position: relative;
   }
   .mc-title {
-    font-size: clamp(1.35rem, 2.2vw, 1.7rem);
+    font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+    font-weight: 800;
   }
   .mc-sub {
     margin-top: 6px;
-    color: var(--ink-3);
+    color: var(--ink-2);
     font-size: 15px;
     display: flex;
     flex-wrap: wrap;
@@ -293,51 +363,61 @@ const jobs = {
     font-weight: 600;
     line-height: 1.25;
     cursor: pointer;
-    transition: transform 0.35s var(--spring), background-color 0.2s, box-shadow 0.2s;
+    transition: transform 0.35s var(--spring), background-color 0.2s, box-shadow 0.2s, opacity 0.2s;
   }
-  .job:hover:not(:disabled) {
+  .job:hover:not([aria-disabled='true']) {
     transform: translateY(-2px);
   }
-  .job:active:not(:disabled) {
+  .job:active:not([aria-disabled='true']) {
     transform: scale(0.96);
   }
   .job[aria-checked='true'] {
     background: var(--grape-soft);
     box-shadow: inset 0 0 0 2px var(--grape);
   }
-  .job:disabled {
-    cursor: default;
-    opacity: 0.6;
+  .is-busy .job:not([aria-checked='true']) {
+    opacity: 0.55;
+    cursor: wait;
   }
   .job-role {
     font-size: 12px;
     font-weight: 600;
-    color: var(--ink-3);
+    color: var(--ink-2);
   }
-  .run:disabled {
-    cursor: progress;
-    opacity: 0.85;
+  .is-busy .run {
+    cursor: wait;
   }
 
-  /* ---------- Stage ---------- */
+  /* ---------- Stage: machine in the middle on wide cards; stacked on narrower ones ---------- */
   .stage {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(150px, 210px) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 0.9fr) minmax(170px, 220px) minmax(0, 1.3fr);
+    grid-template-areas: 'in bot out';
     gap: 16px;
     align-items: center;
     margin-top: 24px;
   }
+  .bot {
+    grid-area: bot;
+  }
+  .tray-in {
+    grid-area: in;
+  }
+  .tray-out {
+    grid-area: out;
+  }
+  /* Trays share a floor height (so most jobs don't shift the page) but may grow, never clip. */
   .tray {
     align-self: stretch;
-    min-height: 250px;
+    min-height: 260px;
     padding: 12px;
-    border-radius: 18px;
-    background: var(--tint);
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--tint) 85%, transparent);
   }
   .tray-label {
     font-size: 12px;
     font-weight: 700;
-    color: var(--ink-3);
+    color: var(--ink-2);
     margin-bottom: 8px;
   }
   .chips {
@@ -367,7 +447,7 @@ const jobs = {
   .out :global(.out-empty) {
     display: grid;
     place-items: center;
-    min-height: 200px;
+    min-height: 236px;
     border: 2px dashed var(--line);
     border-radius: 14px;
     color: var(--ink-3);
@@ -381,6 +461,7 @@ const jobs = {
     display: block;
     width: 100%;
     overflow: visible;
+    filter: drop-shadow(0 18px 16px rgba(42, 33, 64, 0.14));
   }
   .funnel {
     fill: var(--teal);
@@ -431,8 +512,9 @@ const jobs = {
   .chute {
     fill: var(--teal);
   }
+  /* Fixed plum, not the theme ink, so the belt and feet stay grounded in dark mode too. */
   .belt {
-    fill: var(--ink);
+    fill: #2a2140;
   }
   .belt-marks {
     stroke: var(--ground);
@@ -441,7 +523,7 @@ const jobs = {
     stroke-dasharray: 6 12;
   }
   .foot {
-    fill: var(--ink);
+    fill: #2a2140;
   }
   .bot.is-running .gear-a {
     animation: spin 1.2s linear infinite;
@@ -508,47 +590,57 @@ const jobs = {
   .out :global(.o-table th) {
     text-align: left;
     font-size: 12px;
-    color: var(--ink-3);
-    padding: 6px 10px;
+    color: var(--ink-2);
+    padding: 4px 10px;
   }
   .out :global(.o-table td) {
-    padding: 5px 10px;
+    padding: 3px 10px;
     border-top: 1px solid var(--line);
   }
   .out :global(.o-table td:last-child),
   .out :global(.o-table th:last-child) {
     text-align: right;
   }
+  .out :global(.o-missing td) {
+    color: var(--ink-3);
+    font-style: italic;
+  }
   .out :global(.o-bars) {
     display: flex;
-    align-items: flex-end;
     gap: 8px;
-    height: 70px;
-    margin-top: 10px;
-    padding: 8px 10px 0;
+    margin-top: 8px;
+    padding: 8px 10px 6px;
     background: var(--surface);
     border-radius: 12px;
   }
-  .out :global(.o-bars span) {
+  .out :global(.o-bars > span) {
     flex: 1;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: center;
+    display: grid;
     gap: 2px;
+    justify-items: center;
   }
-  .out :global(.o-bars i) {
+  .out :global(.o-track) {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    width: 100%;
+    height: 40px;
+  }
+  .out :global(.o-track i) {
     display: block;
     width: 100%;
-    height: calc(var(--h) - 18px);
     background: var(--teal);
-    border-radius: 6px 6px 0 0;
+    border-radius: 5px 5px 0 0;
+  }
+  .out :global(.o-track em) {
+    font-size: 10px;
+    font-style: normal;
+    color: var(--ink-3);
   }
   .out :global(.o-bars b) {
     font-size: 11px;
     font-weight: 600;
-    color: var(--ink-3);
+    color: var(--ink-2);
   }
   .out :global(.o-queue) {
     list-style: none;
@@ -561,17 +653,25 @@ const jobs = {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 8px;
+    padding: 7px 8px;
     border-radius: 10px;
     background: var(--surface);
-    font-size: 14px;
+    font-size: 13.5px;
     font-weight: 600;
+    white-space: nowrap;
   }
   .out :global(.o-map) {
     display: block;
     width: 100%;
+    max-height: 236px;
     background: var(--surface);
     border-radius: 12px;
+  }
+  .out :global(.o-ring) {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: 1.5;
+    stroke-dasharray: 3 4;
   }
   .out :global(.o-room) {
     fill: var(--teal-soft);
@@ -585,35 +685,110 @@ const jobs = {
   .out :global(.o-sensor) {
     fill: var(--ink);
   }
+  .out :global(.o-scale) {
+    stroke: var(--ink-2);
+    stroke-width: 2;
+  }
+  .out :global(.o-scale-label) {
+    fill: var(--ink-2);
+    font-size: 9px;
+    font-family: var(--sans);
+  }
+
+  /* ---------- After the run: what happened, and where it happened for real ---------- */
+  .after {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 20px;
+    min-height: 104px;
+    align-content: flex-start;
+    margin-top: 16px;
+  }
   .status {
-    min-height: 1.6em;
-    margin-top: 14px;
     font-size: 15px;
     font-weight: 600;
     color: var(--teal-ink);
+    max-width: 34rem;
+  }
+  .real {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: var(--grape-soft);
+    color: var(--grape-ink);
+    font-size: 14.5px;
+    font-weight: 700;
+    text-decoration: none;
+    animation: rise-in 0.5s var(--spring);
+    transition: transform 0.35s var(--spring);
+  }
+  .real[hidden] {
+    display: none;
+  }
+  .real:hover {
+    transform: translateY(-2px);
+  }
+  .real :global(.icon) {
+    transition: transform 0.35s var(--spring);
+  }
+  .real:hover :global(.icon) {
+    transform: translateX(3px);
+  }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
   }
 
   @media (max-width: 640px) {
+    .machine-card {
+      padding: 18px 14px;
+      border-radius: 24px;
+    }
+  }
+
+  /* Card narrower than ~760px (most laptops in the split layout): machine on top, trays below. */
+  @container (max-width: 760px) {
     .stage {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
       grid-template-areas: 'bot bot' 'in out';
+      gap: 12px;
+      margin-top: 18px;
     }
     .bot {
-      grid-area: bot;
-      width: 150px;
+      width: 190px;
       justify-self: center;
     }
-    .tray-in {
-      grid-area: in;
+    .tray {
+      min-height: 250px;
     }
-    .tray-out {
-      grid-area: out;
+  }
+
+  /* Phone-width card: everything in one column, so each tray gets the full width. */
+  @container (max-width: 460px) {
+    .stage {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: 'bot' 'in' 'out';
+      gap: 10px;
+    }
+    .bot {
+      width: 140px;
     }
     .tray {
-      min-height: 220px;
+      min-height: 0;
+      padding: 10px;
     }
     .chips :global(.chip) {
       font-size: 11.5px;
+      padding: 4px 8px;
+    }
+    .out :global(.out-empty) {
+      min-height: 120px;
     }
   }
 </style>

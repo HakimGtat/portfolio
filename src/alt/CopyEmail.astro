@@ -1,0 +1,135 @@
+---
+// The email address as visible, copyable text, for visitors whose "mailto" link opens nothing
+// (webmail, locked-down work PCs) or who want to paste it into a hiring system.
+import Icon from './Icon.astro';
+import { site } from '../data/site';
+
+interface Props {
+  large?: boolean;
+}
+const { large = false } = Astro.props;
+---
+
+<div class:list={['copy', { large }]}>
+  <span class="addr" translate="no">{site.email}</span>
+  <button type="button" class="copy-btn" data-copy={site.email} aria-label="Copy email address">
+    <Icon name="copy" class="i-copy" />
+    <Icon name="check" class="i-check" />
+    <span data-copy-label>Copy</span>
+  </button>
+  <span class="visually-hidden" aria-live="polite" data-copy-status></span>
+</div>
+
+<script>
+  const touch = matchMedia('(pointer: coarse)').matches;
+  const mac = /Mac|iPhone|iPad/.test(navigator.userAgent);
+  // What to tell people when the clipboard is blocked and the address is only selected.
+  const manual = touch
+    ? { label: 'Selected', said: 'Address selected. Long-press to copy it.' }
+    : mac
+      ? { label: 'Press ⌘C', said: 'Address selected. Press Command C to copy it.' }
+      : { label: 'Press Ctrl+C', said: 'Address selected. Press Control C to copy it.' };
+
+  document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
+    const label = btn.querySelector<HTMLElement>('[data-copy-label]')!;
+    const live = btn.parentElement!.querySelector<HTMLElement>('[data-copy-status]')!;
+    let timer = 0;
+    btn.addEventListener('click', async () => {
+      const text = btn.dataset.copy!;
+      let ok = false;
+      try {
+        await navigator.clipboard.writeText(text);
+        ok = true;
+      } catch {
+        // Older browsers or blocked clipboard: select the address so it can be copied by hand.
+        const addr = btn.parentElement!.querySelector('.addr');
+        if (addr) {
+          const range = document.createRange();
+          range.selectNodeContents(addr);
+          const sel = getSelection();
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+        }
+      }
+      btn.classList.toggle('is-copied', ok);
+      label.textContent = ok ? 'Copied' : manual.label;
+      live.textContent = ok ? 'Email address copied' : manual.said;
+      clearTimeout(timer);
+      timer = window.setTimeout(
+        () => {
+          btn.classList.remove('is-copied');
+          label.textContent = 'Copy';
+          live.textContent = '';
+        },
+        ok ? 2200 : 5000,
+      );
+    });
+  });
+</script>
+
+<style>
+  .copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+  }
+  .addr {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+    user-select: all;
+  }
+  .large .addr {
+    font-family: var(--display);
+    font-size: clamp(1.1rem, 2vw, 1.35rem);
+    font-weight: 700;
+  }
+  .copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--surface);
+    box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--line);
+    color: var(--ink);
+    font: inherit;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.35s var(--spring), background-color 0.2s, color 0.2s;
+  }
+  @media (pointer: coarse) {
+    .copy-btn {
+      min-height: 44px;
+      padding: 0 16px;
+    }
+  }
+  .copy-btn:hover {
+    transform: translateY(-2px);
+  }
+  .copy-btn:active {
+    transform: scale(0.95);
+  }
+  .copy-btn :global(.icon) {
+    width: 16px;
+    height: 16px;
+  }
+  .copy-btn :global(.i-check) {
+    display: none;
+  }
+  .copy-btn.is-copied {
+    background: var(--teal-soft);
+    color: var(--teal-ink);
+  }
+  .copy-btn.is-copied :global(.i-copy) {
+    display: none;
+  }
+  .copy-btn.is-copied :global(.i-check) {
+    display: block;
+  }
+</style>
