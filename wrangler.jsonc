@@ -1,0 +1,11 @@
+// Cloudflare Workers config. The site is fully static: `npm run build` writes plain files to dist/,
+// and `wrangler deploy` uploads them as static assets. No server code, no adapter.
+// "name" must match the Worker's name in the Cloudflare dashboard.
+{
+  "name": "applai",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page"
+  }
+}

@@ -27,8 +27,12 @@ export async function readSourceFile(repo: string, commit: string, path: string)
     throw new Error(`Could not fetch ${repo}@${commit.slice(0, 7)}:${path} (HTTP ${res.status})`);
   }
   const text = await res.text();
-  await mkdir(dirname(cached), { recursive: true });
-  await writeFile(cached, text);
+  try {
+    await mkdir(dirname(cached), { recursive: true });
+    await writeFile(cached, text);
+  } catch {
+    // The cache only saves re-downloads; sandboxed builds may not allow writing files.
+  }
   return text;
 }
 
