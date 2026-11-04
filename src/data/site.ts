@@ -5,7 +5,7 @@ export const site = {
   focus: ['embedded', 'networking', 'systems'],
   location: 'Ottawa, ON',
   email: 'ah.gtat@gmail.com',
-  github: 'https://github.com/Hakim112',
+  github: 'https://github.com/HakimGtat',
   linkedin: 'https://www.linkedin.com/in/hakimgtat',
   // Drop a resume at public/resume.pdf and the download link appears automatically.
   resumePath: '/resume.pdf',

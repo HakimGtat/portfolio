@@ -12,7 +12,7 @@ Recruiters and hiring managers across a broad range (confirmed 2026-11-03): IT s
 
 ## Product Purpose
 
-Personal portfolio and long-term hub for Abdelhakim Gtat (Hakim), Computer Engineer (B.Eng., McMaster, Dec. 2024), Ottawa. Linked to GitHub (`Hakim112`). Success: a reviewer understands what Hakim built, how it works, and what his part was, then reaches out by email.
+Personal portfolio and long-term hub for Abdelhakim Gtat (Hakim), Computer Engineer (B.Eng., McMaster, Dec. 2024), Ottawa. Linked to GitHub (`HakimGtat`). Success: a reviewer understands what Hakim built, how it works, and what his part was, then reaches out by email.
 
 ## Positioning
 

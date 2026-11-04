@@ -1,6 +1,6 @@
 # Portfolio Hub — Build Plan
 
-Personal portfolio for Abdelhakim Gtat (Computer Engineer — embedded, networking, systems). Linked to GitHub (`Hakim112`) and the central hub for all future projects. Signature feature: an "Explain this" view that walks through real code in plain English.
+Personal portfolio for Abdelhakim Gtat (Computer Engineer — embedded, networking, systems). Linked to GitHub (`HakimGtat`) and the central hub for all future projects. Signature feature: an "Explain this" view that walks through real code in plain English.
 
 ---
 
@@ -66,7 +66,7 @@ Structure leaves room for a `/notes` blog section; not in v1.
 ```yaml
 # src/content/projects/markov-prefetcher.mdx frontmatter
 title: Markov Prefetcher
-repo: Hakim112/markov-prefetcher
+repo: HakimGtat/markov-prefetcher
 commit: <sha>
 role: Solo
 stack: [C++, Linux, MacSim, x86]
